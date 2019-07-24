@@ -2,11 +2,17 @@ package main
 
 import (
     "net/http"
+	"encoding/json"
     "log"
     "fmt"
     "os"
+	"time"
     "github.com/joho/godotenv"
 )
+
+type user struct {
+	PublicId string `json:"public_id"`
+}
 
 func bouncerSaysOk(r *http.Request) (bool, int, string) {
 
@@ -23,23 +29,29 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 
     if x != "" {
 		// call authy microservice
-		client := &http.Client{}
+		//client := http.DefaultClient
         req, err := http.NewRequest("GET", getAuthyURL(), nil)
         if err != nil {
-            log.Fatal(err)
+            log.Print(err)
 			return false, http.StatusUnauthorized, badmess
         }
         req.Header.Set("X-Access-Token", x)
 		req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+		client := &http.Client{Timeout: time.Second * 10}
 		resp, e := client.Do(req)
 		if e != nil {
-			log.Fatal(fmt.Sprintf("The HTTP request failed with error %s", e))
+			log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
 			badmess = `{"message": "I'm sorry Dave"}`
 			return false, http.StatusServiceUnavailable, badmess
 		} else {
+			defer resp.Body.Close()
 			if resp.StatusCode == 200 {
 				//mess := `{"message": "System running..."}`
-                return true, http.StatusOK, ""
+				//decoder := json.NewDecoder(r.Body)
+				var u user
+				json.NewDecoder(resp.Body).Decode(&u)
+                return true, http.StatusOK, u.PublicId
 			}
 		}
     }

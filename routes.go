@@ -1,18 +1,14 @@
 package main
 
 import (
-    //"net/http"
-    "github.com/gorilla/mux"
 )
 
-func NewRouter() *mux.Router {
-
-    router := mux.NewRouter()
+func (a *App) initializeRoutes() {
 
     // endpoints
-    router.HandleFunc("/reviews/status", getStatus).Methods("GET")
-    router.HandleFunc("/reviews", getAllMyReviews).Methods("GET")
-	router.HandleFunc("/reviews/{reviewId}", getMyReview).Methods("GET")
+    a.Router.HandleFunc("/reviews/status", a.getStatus).Methods("GET")
+    a.Router.HandleFunc("/reviews", a.getAllMyReviews).Methods("GET")
+    a.Router.HandleFunc("/reviews/{reviewId}", a.getMyReview).Methods("GET")
+	a.Router.HandleFunc("/reviews/{reviewId}", a.deleteReview).Methods("DELETE")
 
-    return router
 }

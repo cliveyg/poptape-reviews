@@ -16,7 +16,8 @@ type App struct {
 
 func (a *App) Initialize(user, password, dbname string) {
 
-	a.Router = NewRouter()
+	a.Router = mux.NewRouter()
+	a.initializeRoutes()
 
 	connectionString :=
 		fmt.Sprintf("user=%s password=%s dbname=%s", user, password, dbname)
