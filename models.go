@@ -3,15 +3,16 @@ package main
 import (
 	"database/sql"
 	"errors"
+	//"encoding/json"
 )
 
 type review struct {
-	reviewId string json:"review_id"
-	review   string json:"review"
-	publicId string json:"public_id"
-	overall  int    json:"overall"
-	papCost  int    json:"post_and_packaging"
-	comm     int    json:"communication"
+	reviewId string `json:"review_id"`
+	review   string `json:"review"`
+	publicId string `json:"public_id"`
+	overall  int    `json:"overall"`
+	papCost  int    `json:"post_and_packaging"`
+	comm     int    `json:"communication"`
 }
 
 func (r *review) getReview(db *sql.DB) error {
