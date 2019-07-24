@@ -1,0 +1,17 @@
+# Ignore everything in the root
+/*
+/.env
+/reviews
+# Un-ignore these files - it's bit of a clonky way to do it but it's more secure
+!Dockerfile
+!docker-compose.yml
+!README.md
+!.env.example
+!.gitignore
+!app.go
+!reviews.go
+!bouncer.go
+!handlers.go
+!misc.go
+!routes.go
+!models.go

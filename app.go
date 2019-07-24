@@ -1,0 +1,38 @@
+package main
+
+import (
+	"database/sql"
+	"github.com/gorilla/mux"
+	"log"
+	"fmt"
+	"net/http"
+	_ "github.com/lib/pq"
+)
+
+type App struct {
+	Router *mux.Router
+	DB     *sql.DB
+}
+
+func (a *App) Initialize(user, password, dbname string) {
+
+	a.Router = NewRouter()
+
+	connectionString :=
+		fmt.Sprintf("user=%s password=%s dbname=%s", user, password, dbname)
+
+	var err error
+	a.DB, err = sql.Open("postgres", connectionString)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		log.Print("Connected to db successfully")
+	}
+
+}
+
+
+func (a *App) Run(addr string) {
+	log.Print(fmt.Sprintf("Server running on port [%s]", addr))
+	log.Fatal(http.ListenAndServe(addr, a.Router))
+}
