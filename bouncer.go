@@ -29,7 +29,6 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 
     if x != "" {
 		// call authy microservice
-		//client := http.DefaultClient
         req, err := http.NewRequest("GET", getAuthyURL(), nil)
         if err != nil {
             log.Print(err)
@@ -55,7 +54,6 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			}
 		}
     }
-
     return false, http.StatusUnauthorized, badmess
 }
 

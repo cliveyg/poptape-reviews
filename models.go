@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	//"encoding/json"
 )
 
 type review struct {
@@ -88,46 +87,7 @@ func (r *review) createReview(db *sql.DB) error {
 
 // ----------------------------------------------------------------------------
 
-func getReviews(db *sql.DB, public_id string, start, count int) ([]review, error) {
-
-	rows, err := db.Query(
-		"SELECT review_id,"+
-				"review,"+
-                "public_id,"+
-				"auction_id,"+
-                "overall,"+
-                "pap_cost,"+
-                "communication,"+
-                "as_described,"+
-				"created FROM reviews WHERE public_id=$1 "+
-				"LIMIT $2 OFFSET $3",
-		public_id, count, start)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	reviews := []review{}
-
-	for rows.Next() {
-		var r review
-		if err := rows.Scan(&r.ReviewId, &r.Review, &r.PublicId,
-							&r.AuctionId, &r.Overall, &r.PapCost,
-							&r.Comm, &r.AsDesc, &r.Created); err != nil {
-			return nil, err
-		}
-		reviews = append(reviews, r)
-	}
-
-	return reviews, nil
-
-}
-
-// ----------------------------------------------------------------------------
-
-func getReviewsByAuction(db *sql.DB, auction_id string, start, count int) ([]review, error) {
+func getReviewsByInput(db *sql.DB, input_type, input_id string, start, count int) ([]review, error) {
 
     rows, err := db.Query(
         "SELECT review_id,"+
@@ -138,9 +98,9 @@ func getReviewsByAuction(db *sql.DB, auction_id string, start, count int) ([]rev
                 "pap_cost,"+
                 "communication,"+
                 "as_described,"+
-                "created FROM reviews WHERE auction_id=$1 "+
+                "created FROM reviews WHERE "+input_type+"=$1 "+
                 "LIMIT $2 OFFSET $3",
-        auction_id, count, start)
+        input_id, count, start)
 
     if err != nil {
         return nil, err
@@ -164,4 +124,3 @@ func getReviewsByAuction(db *sql.DB, auction_id string, start, count int) ([]rev
 
 }
 
-// ----------------------------------------------------------------------------

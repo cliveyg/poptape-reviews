@@ -27,6 +27,7 @@ Returns a single review details of for the authenticated user.
 
 ### To Do:
 * ~~Return reviews by auction~~
+* ~~Return reviews by user~~
 * Write tests
 * Validate input
 * Dockerize
