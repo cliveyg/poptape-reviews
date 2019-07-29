@@ -46,8 +46,6 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 		} else {
 			defer resp.Body.Close()
 			if resp.StatusCode == 200 {
-				//mess := `{"message": "System running..."}`
-				//decoder := json.NewDecoder(r.Body)
 				var u user
 				json.NewDecoder(resp.Body).Decode(&u)
                 return true, http.StatusOK, u.PublicId

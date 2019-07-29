@@ -47,11 +47,12 @@ func (r *review) updateReview(db *sql.DB) error {
 
 // ----------------------------------------------------------------------------
 
-func (r *review) deleteReview(db *sql.DB) error {
+func (r *review) deleteReview(db *sql.DB) (int64, error) {
 
-	_, err := db.Exec("DELETE FROM reviews WHERE review_id=$1", r.ReviewId)
-
-	return err
+	res, err := db.Exec("DELETE FROM reviews WHERE "+
+					  "review_id=$1 AND public_id=$2", r.ReviewId, r.PublicId)
+	rows, _ := res.RowsAffected()
+	return rows, err
 }
 
 // ----------------------------------------------------------------------------

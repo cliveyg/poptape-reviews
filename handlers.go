@@ -125,14 +125,19 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
     }
 
     rev := review{ReviewId: reviewId, PublicId: publicId}
-    if err := rev.deleteReview(a.DB); err != nil {
+	res, err := rev.deleteReview(a.DB)
+    if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
         return
     }
 
-    w.WriteHeader(http.StatusGone)
+	if res == 1 {
+		w.WriteHeader(http.StatusGone)
+	} else {
+		w.WriteHeader(http.StatusNotAcceptable)
+	}
 
 }
 
