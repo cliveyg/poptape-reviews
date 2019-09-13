@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"net/url"
 )
 
 type review struct {
@@ -15,6 +16,18 @@ type review struct {
 	Comm      int    `json:"communication"`
 	AsDesc    int    `json:"as_described"`
 	Created   string `json:"created"`
+}
+
+// ----------------------------------------------------------------------------
+
+func (r *review) validate() url.Values {
+
+	errs := url.Values{}
+
+	if r.Review == "" {
+		errs.Add("Review", "The review field is required")
+	}
+	return errs
 }
 
 // ----------------------------------------------------------------------------

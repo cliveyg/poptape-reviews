@@ -1,0 +1,29 @@
+version: '3'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: poptape/reviews/api:v0.1
+    ports:
+      - "1244:8020"
+    restart: "no"
+    depends_on:
+      - db
+    networks:
+      - net_poptape
+  db:
+    image: postgres:alpine
+    restart: always
+    ports:
+      - "1245:5432"
+    volumes:
+      - poptape_reviews_data:/var/lib/postgresql/data
+    networks:
+      - net_poptape
+networks:
+  net_poptape:
+    external: true
+volumes:
+  poptape_reviews_data:
+  

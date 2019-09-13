@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/google/uuid"
     "net/http"
+    "crypto/tls"
     "log"
     "os"
 	"fmt"
@@ -31,7 +32,12 @@ func ValidAuction(auctionId, x string) (bool) {
 	req.Header.Set("X-Access-Token", x)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
-	client := &http.Client{Timeout: time.Second * 10}
+    // skip verify to avoid x509 cert check - not sure if this is a good idea
+    tr := &http.Transport{
+        TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
+    }
+
+	client := &http.Client{Timeout: time.Second * 10, Transport: tr}
 	resp, e := client.Do(req)
 	if e != nil {
 		log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))

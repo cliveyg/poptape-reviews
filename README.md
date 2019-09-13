@@ -56,7 +56,7 @@ Expected return codes: [200, 404]
 * ~~Return reviews by auction~~
 * ~~Return reviews by user~~
 * Need to add check for auction winner
-* Write tests
+* Write more tests
 * Validate input
 * Dockerize
 * Documentation

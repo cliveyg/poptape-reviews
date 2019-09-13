@@ -14,13 +14,13 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialize(user, password, dbname string) {
+func (a *App) Initialize(host, user, password, dbname string) {
 
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 
 	connectionString :=
-		fmt.Sprintf("user=%s password=%s dbname=%s", user, password, dbname)
+		fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", host, user, password, dbname)
 
 	var err error
 	a.DB, err = sql.Open("postgres", connectionString)

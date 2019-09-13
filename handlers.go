@@ -159,6 +159,8 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&rev); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		mess = fmt.Sprintf("{ \"error\": \"%s\" }",err)
+		io.WriteString(w, mess)
 		return
 	}
 	defer r.Body.Close()

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
     "log"
     "fmt"
+    //"io/ioutil"
     "os"
 	"time"
     "github.com/joho/godotenv"
@@ -34,6 +35,8 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
             log.Print(err)
 			return false, http.StatusUnauthorized, badmess
         }
+
+        log.Print(fmt.Sprintf("X-Access-Token [%s]", x))
         req.Header.Set("X-Access-Token", x)
 		req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -45,6 +48,8 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusServiceUnavailable, badmess
 		} else {
 			defer resp.Body.Close()
+            //bodyBytes, _ := ioutil.ReadAll(resp.Body)
+            //log.Print(string(bodyBytes))
 			if resp.StatusCode == 200 {
 				var u user
 				json.NewDecoder(resp.Body).Decode(&u)
