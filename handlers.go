@@ -46,7 +46,7 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	reviews, err := getReviewsByInput(a.DB, "public_id", publicId, start, count)
+	reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -55,7 +55,11 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	}
 
     jsonData, _ := json.Marshal(reviews)
-    w.WriteHeader(http.StatusOK)
+    if len(reviews) == 0 {
+        w.WriteHeader(http.StatusNotFound)
+    } else {
+        w.WriteHeader(http.StatusOK)
+    }
     w.Write(jsonData)
 
 }
@@ -124,7 +128,7 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    rev := review{ReviewId: reviewId, PublicId: publicId}
+    rev := review{ReviewId: reviewId, ReviewedBy: publicId}
 	res, err := rev.deleteReview(a.DB)
     if err != nil {
 		log.Print(err.Error())
@@ -170,15 +174,22 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
     }
 	rev.ReviewId = reviewId.String()
-	rev.PublicId = publicId
+	rev.ReviewedBy = publicId
 
+    // need to run these calls in parallel
 	x := r.Header.Get("X-Access-Token")
-	if !ValidAuction(rev.AuctionId, x) {
+	if !ValidAuction(rev.AuctionId, publicId, x) {
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, `{ "message": "Auction does not exist" }`)
 		return
 	}
-
+/*
+    if !ValidItem(rev.ItemId, x) {
+        w.WriteHeader(http.StatusBadRequest)
+        io.WriteString(w, `{ "message": "Item does not exist" }`)
+        return
+    }
+*/
 	//TODO: Check that user actually won the auction
 
 	if err := rev.createReview(a.DB); err != nil {
@@ -232,10 +243,104 @@ func (a *App) getAllReviewsByAuction(w http.ResponseWriter, r *http.Request) {
     }
 
     jsonData, _ := json.Marshal(reviews)
+    if len(reviews) == 0 {
+        w.WriteHeader(http.StatusNotFound)
+    } else {
+        w.WriteHeader(http.StatusOK)
+    }
+    w.Write(jsonData)
+
+}
+
+// ----------------------------------------------------------------------------
+
+func (a *App) getReviewByItem(w http.ResponseWriter, r *http.Request) {
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+    b, st, mess := CheckRequest(r)
+    if !b {
+        w.WriteHeader(st)
+        io.WriteString(w, mess)
+        return
+    }
+    vars := mux.Vars(r)
+    itemId := vars["itemId"]
+
+    if !IsValidUUID(itemId) {
+        w.WriteHeader(http.StatusBadRequest)
+        io.WriteString(w, `{ "message": "Not a valid item ID" }`)
+        return
+    }
+
+    rev := review{ItemId: itemId}
+    if err := rev.getReviewByItem(a.DB); err != nil {
+        switch err {
+        case sql.ErrNoRows:
+            w.WriteHeader(http.StatusNotFound)
+        default:
+            log.Print(err.Error())
+            w.WriteHeader(http.StatusInternalServerError)
+            io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+        }
+        return
+    }
+
+    jsonData, _ := json.Marshal(rev)
     w.WriteHeader(http.StatusOK)
     w.Write(jsonData)
 
 }
+
+// ----------------------------------------------------------------------------
+
+func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+    b, st, mess := CheckRequest(r)
+    if !b {
+        w.WriteHeader(st)
+        io.WriteString(w, mess)
+        return
+    }
+    vars := mux.Vars(r)
+    publicId := vars["publicId"]
+
+    if !IsValidUUID(publicId) {
+        w.WriteHeader(http.StatusBadRequest)
+        io.WriteString(w, `{ "message": "Not a valid public ID" }`)
+        return
+    }
+
+    count, _ := strconv.Atoi(r.FormValue("count"))
+    start, _ := strconv.Atoi(r.FormValue("start"))
+
+    if count > 10 || count < 1 {
+        count = 10
+    }
+    if start < 0 {
+        start = 0
+    }
+
+    reviews, err := getReviewsByInput(a.DB, "seller", publicId, start, count)
+    if err != nil {
+        log.Print(err.Error())
+        w.WriteHeader(http.StatusInternalServerError)
+        io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+        return
+    }
+
+    jsonData, _ := json.Marshal(reviews)
+    if len(reviews) == 0 {
+        w.WriteHeader(http.StatusNotFound)
+    } else {
+        w.WriteHeader(http.StatusOK)
+    }
+    w.Write(jsonData)
+
+}
+
 
 // ----------------------------------------------------------------------------
 
@@ -268,7 +373,7 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
         start = 0
     }
 
-    reviews, err := getReviewsByInput(a.DB, "public_id", publicId, start, count)
+    reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
     if err != nil {
         log.Print(err.Error())
         w.WriteHeader(http.StatusInternalServerError)
@@ -277,7 +382,11 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
     }
 
     jsonData, _ := json.Marshal(reviews)
-    w.WriteHeader(http.StatusOK)
+    if len(reviews) == 0 {
+        w.WriteHeader(http.StatusNotFound)
+    } else {
+        w.WriteHeader(http.StatusOK)
+    }
     w.Write(jsonData)
 
 }

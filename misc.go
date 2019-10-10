@@ -21,46 +21,30 @@ func IsValidUUID(u string) bool {
 }
 
 
-func ValidAuction(auctionId, x string) (bool) {
+func ValidAuction(auctionId, publicId, x string) (bool) {
 
-	fullURL := GetAuctionURL() + auctionId
-	req, err := http.NewRequest("GET", fullURL, nil)
-	if err != nil {
-		log.Print(err)
-		return false
-	}
-	req.Header.Set("X-Access-Token", x)
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-    // skip verify to avoid x509 cert check - not sure if this is a good idea
-    tr := &http.Transport{
-        TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
-    }
-
-	client := &http.Client{Timeout: time.Second * 10, Transport: tr}
-	resp, e := client.Do(req)
-	if e != nil {
-		log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
-		return false
-	} else {
-		defer resp.Body.Close()
-		if resp.StatusCode == 200 {
-			return true
-		}
-	}
-	return false
+	fullURL := GetURL("AUCTIONURL") + auctionId
+    return ValidThing(fullURL, x, "auction", publicId)
 }
 
 
-func GetAuctionURL() string {
+func ValidItem(itemId, x string) (bool) {
+
+    fullURL := GetURL("ITEMURL") + itemId
+    return ValidThing(fullURL, x, "item", "")
+}
+
+
+func GetURL(t string) string {
 
     err := godotenv.Load()
     if err != nil {
       log.Fatal("Error loading .env file")
     }
-    return os.Getenv("AUCTIONURL")
+    return os.Getenv(t)
 
 }
+
 
 func CheckRequest(r *http.Request) (bool, int, string) {
 
@@ -72,4 +56,40 @@ func CheckRequest(r *http.Request) (bool, int, string) {
         return false, http.StatusBadRequest, badmess
     }
 	return true, http.StatusOK, ""
+}
+
+
+func ValidThing(URL, x, thingType, UUID string) (bool) {
+
+    req, err := http.NewRequest("GET", URL, nil)
+    if err != nil {
+        log.Print(err)
+        return false
+    }
+    req.Header.Set("X-Access-Token", x)
+    req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+    // skip verify to avoid x509 cert check - not sure if this is a good idea
+    tr := &http.Transport{
+        TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
+    }
+
+    client := &http.Client{Timeout: time.Second * 10, Transport: tr}
+    resp, e := client.Do(req)
+    if e != nil {
+        log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
+        return false
+    } else {
+        defer resp.Body.Close()
+        //TODO: check if auction finished and user won
+        // when thingType is 'auction'
+        if thingType == "auction:" {
+            UUID = ""
+        }
+        if resp.StatusCode == 200 {
+            return true
+        }
+    }
+    return false
+
 }

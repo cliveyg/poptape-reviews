@@ -38,9 +38,15 @@ Deletes a single review.
 Expected return codes: [200, 404]
 
 
-/reviews/user/<public_id> [GET] (Unauthenticated)
+/reviews/by/user/<public_id> [GET] (Unauthenticated)
 
-Returns all reviews for a user.
+Returns all reviews written by a user.
+Expected return codes: [200, 404]
+
+
+/reviews/of/user/<public_id> [GET] (Unauthenticated)
+
+Returns all reviews written about a user.
 Expected return codes: [200, 404]
 
 
@@ -53,10 +59,14 @@ Expected return codes: [200, 404]
 ```
 
 ### To Do:
+* Refactor to use common code
 * ~~Return reviews by auction~~
 * ~~Return reviews by user~~
+* ~~Return reviews of user~~
 * Need to add check for auction winner
+* Need to check item is valid
+* Fix some tests - some are failing even though the microservice works
 * Write more tests
 * Validate input
-* Dockerize
+* ~~Dockerize~~
 * Documentation
