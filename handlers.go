@@ -313,6 +313,21 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    if r.FormValue("totalonly") != "" {
+        // just return the total count
+        total, err := getTotalReviews(a.DB, "seller", publicId)
+        if err != nil {
+            log.Print(err.Error())
+            w.WriteHeader(http.StatusInternalServerError)
+            io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+            return
+        }
+        w.WriteHeader(http.StatusOK)
+        mess := fmt.Sprintf("{ \"total_reviews\": \"%d\" }",total)
+        io.WriteString(w, mess)
+        return
+    }
+
     count, _ := strconv.Atoi(r.FormValue("count"))
     start, _ := strconv.Atoi(r.FormValue("start"))
 
@@ -360,6 +375,21 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
     if !IsValidUUID(publicId) {
         w.WriteHeader(http.StatusBadRequest)
         io.WriteString(w, `{ "message": "Not a valid public ID" }`)
+        return
+    }
+
+    if r.FormValue("totalonly") != "" {
+        // just return the total count
+        total, err := getTotalReviews(a.DB, "reviewed_by", publicId)
+        if err != nil {
+            log.Print(err.Error())
+            w.WriteHeader(http.StatusInternalServerError)
+            io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+            return
+        }
+        w.WriteHeader(http.StatusOK)
+        mess := fmt.Sprintf("{ \"total_reviews\": \"%d\" }",total)
+        io.WriteString(w, mess)
         return
     }
 

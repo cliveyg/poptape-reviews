@@ -109,6 +109,31 @@ func (r *review) createReview(db *sql.DB) error {
 	return nil
 }
 
+
+// ----------------------------------------------------------------------------
+
+func getTotalReviews(db *sql.DB, input_type, input_id string) (count int, err error) {
+
+    rows, err := db.Query(
+        "SELECT COUNT(*) FROM reviews WHERE "+input_type+"=$1",
+        input_id)
+
+    if err != nil {
+        return 0, err
+    }
+
+    defer rows.Close()
+
+    for rows.Next() {
+        if err := rows.Scan(&count); err != nil {
+            return 0, err
+        }
+    }
+    return count, nil
+
+}
+
+
 // ----------------------------------------------------------------------------
 
 func getReviewsByInput(db *sql.DB, input_type, input_id string,
