@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/url"
-    //"fmt"
+    "fmt"
 )
 
 type review struct {
@@ -202,5 +202,14 @@ func (r *review) getReviewByItem(db *sql.DB) error {
                        &r.Comm,
                        &r.AsDesc,
                        &r.Created)
+}
+
+// ----------------------------------------------------------------------------
+
+func getScore(db *sql.DB, public_id string) (count int, err error) {
+
+    fmt.Sprintf("public id is [%s]",public_id)
+
+    return 89, nil
 }
 

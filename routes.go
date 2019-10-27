@@ -19,5 +19,7 @@ func (a *App) initializeRoutes() {
                         a.getAllReviewsAboutUser).Methods("GET")
     a.Router.HandleFunc("/reviews/by/user/{publicId}",
                         a.getAllReviewsByUser).Methods("GET")
+    a.Router.HandleFunc("/reviews/user/{publicId}",
+                        a.getMetadataOfUser).Methods("GET")
 
 }

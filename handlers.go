@@ -420,3 +420,61 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
     w.Write(jsonData)
 
 }
+
+// ----------------------------------------------------------------------------
+
+func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+    b, st, mess := CheckRequest(r)
+    if !b {
+        w.WriteHeader(st)
+        io.WriteString(w, mess)
+        return
+    }
+    vars := mux.Vars(r)
+    publicId := vars["publicId"]
+
+    if !IsValidUUID(publicId) {
+        w.WriteHeader(http.StatusBadRequest)
+        io.WriteString(w, `{ "message": "Not a valid public ID" }`)
+        return
+    }
+
+    // get the total count of reviews by
+    totalReviewedBy, err := getTotalReviews(a.DB, "reviewed_by", publicId)
+    if err != nil {
+        log.Print(err.Error())
+        w.WriteHeader(http.StatusInternalServerError)
+        io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+        return
+    }
+
+    // get the total count of reviews of
+    totalReviewsOf, err := getTotalReviews(a.DB, "reviewed_by", publicId)
+    if err != nil {
+        log.Print(err.Error())
+        w.WriteHeader(http.StatusInternalServerError)
+        io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+        return
+    }
+
+    calculatedScore, err := getScore(a.DB, publicId)
+    if err != nil {
+        log.Print(err.Error())
+        w.WriteHeader(http.StatusInternalServerError)
+        io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    //io.WriteString(w, `{ "reviews_by": `+totalReviewedBy+`,
+    //                 }`)
+    multiline := "{ \"total_reviews_of\": "+strconv.Itoa(totalReviewsOf)+" ,\n"+
+                 " \"total_reviews_by\": "+strconv.Itoa(totalReviewedBy)+" ,\n"+
+                 " \"calculated_score\": "+strconv.Itoa(calculatedScore)+" }"
+    io.WriteString(w, multiline)
+    return
+}
+
