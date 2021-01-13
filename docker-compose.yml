@@ -7,7 +7,7 @@ services:
     image: poptape/reviews/api:v0.1
     ports:
       - "1244:8020"
-    restart: "no"
+    restart: always
     depends_on:
       - db
     networks:

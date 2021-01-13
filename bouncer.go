@@ -1,14 +1,14 @@
 package main
 
 import (
-    "net/http"
 	"encoding/json"
-    "log"
-    "fmt"
-    //"io/ioutil"
-    "os"
+	"fmt"
+	"log"
+	"net/http"
+	//"io/ioutil"
+	"github.com/joho/godotenv"
+	"os"
 	"time"
-    "github.com/joho/godotenv"
 )
 
 type user struct {
@@ -17,27 +17,27 @@ type user struct {
 
 func bouncerSaysOk(r *http.Request) (bool, int, string) {
 
-    contype := r.Header.Get("Content-type")
+	contype := r.Header.Get("Content-type")
 	badmess := `{"message": "Ooh you are naughty"}`
 
-    if !(contype == "application/json" ||
-        contype == "application/json; charset=UTF-8") {
-        badmess = `{"message": "Request must be json"}`
-        return false, http.StatusBadRequest, badmess
-    }
+	if !(contype == "application/json" ||
+		contype == "application/json; charset=UTF-8") {
+		badmess = `{"message": "Request must be json"}`
+		return false, http.StatusBadRequest, badmess
+	}
 
-    x := r.Header.Get("X-Access-Token")
+	x := r.Header.Get("X-Access-Token")
 
-    if x != "" {
+	if x != "" {
 		// call authy microservice
-        req, err := http.NewRequest("GET", getAuthyURL(), nil)
-        if err != nil {
-            log.Print(err)
+		req, err := http.NewRequest("GET", getAuthyURL(), nil)
+		if err != nil {
+			log.Print(err)
 			return false, http.StatusUnauthorized, badmess
-        }
+		}
 
-        log.Print(fmt.Sprintf("X-Access-Token [%s]", x))
-        req.Header.Set("X-Access-Token", x)
+		log.Print(fmt.Sprintf("X-Access-Token [%s]", x))
+		req.Header.Set("X-Access-Token", x)
 		req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 		client := &http.Client{Timeout: time.Second * 10}
@@ -48,24 +48,24 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusServiceUnavailable, badmess
 		} else {
 			defer resp.Body.Close()
-            //bodyBytes, _ := ioutil.ReadAll(resp.Body)
-            //log.Print(string(bodyBytes))
+			//bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			//log.Print(string(bodyBytes))
 			if resp.StatusCode == 200 {
 				var u user
 				json.NewDecoder(resp.Body).Decode(&u)
-                return true, http.StatusOK, u.PublicId
+				return true, http.StatusOK, u.PublicId
 			}
 		}
-    }
-    return false, http.StatusUnauthorized, badmess
+	}
+	return false, http.StatusUnauthorized, badmess
 }
 
 func getAuthyURL() string {
 
-    err := godotenv.Load()
-    if err != nil {
-      log.Fatal("Error loading .env file")
-    }
-    return os.Getenv("AUTHYURL")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	return os.Getenv("AUTHYURL")
 
 }

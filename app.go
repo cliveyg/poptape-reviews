@@ -2,11 +2,11 @@ package main
 
 import (
 	"database/sql"
-	"github.com/gorilla/mux"
-	"log"
 	"fmt"
-	"net/http"
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"log"
+	"net/http"
 )
 
 type App struct {
@@ -31,7 +31,6 @@ func (a *App) Initialize(host, user, password, dbname string) {
 	}
 
 }
-
 
 func (a *App) Run(addr string) {
 	log.Print(fmt.Sprintf("Server running on port [%s]", addr))
