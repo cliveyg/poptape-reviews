@@ -1,16 +1,31 @@
-#FROM python:3.7-alpine 
-FROM ubuntu:18.04
-# as base                                                                                                
+FROM golang:1.12-alpine as build
+
+RUN apk --no-cache add git
+
+ENV GO111MODULE=on
+
+RUN mkdir /app
+ADD . /app
+WORKDIR /app
+
+# get deps
+RUN go mod init
+RUN go mod tidy
+RUN go mod download
+
+# need these flags or alpine image won't run due to dynamically linked libs in binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-w' -o reviews
+
+
+FROM alpine:latest
 
 RUN mkdir -p /reviews
-COPY reviews /reviews
-COPY .env /reviews
+COPY --from=build /app/reviews /reviews
+COPY --from=build /app/.env /reviews
 WORKDIR /reviews
-
-# Install any needed packages specified in requirements.txt
 
 # Make port 8020 available to the world outside this container
 EXPOSE 8020
 
-# Run app.py when the container launches
+# Run reviews binary when the container launches
 CMD ["./reviews"]
