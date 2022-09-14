@@ -1,15 +1,14 @@
-FROM golang:1.12-alpine as build
+FROM golang:1.19-alpine as build
 
 RUN apk --no-cache add git
-
-ENV GO111MODULE=on
 
 RUN mkdir /app
 ADD . /app
 WORKDIR /app
 
-# get deps
-RUN go mod init
+# remove any go module files and get deps
+RUN rm -f go.mod go.sum
+RUN go mod init github.com/cliveyg/poptape-reviews
 RUN go mod tidy
 RUN go mod download
 
