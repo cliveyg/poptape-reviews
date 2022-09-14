@@ -3,7 +3,7 @@
 package main_test
 
 import (
-	"."
+	"github.com/cliveyg/poptape-reviews"
 	"bytes"
 	"encoding/json"
 	"fmt"
