@@ -64,9 +64,13 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 	req.Header.Set("X-Access-Token", x)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
-	// skip verify to avoid x509 cert check - not sure if this is a good idea
+	skipVerify := false
+	if os.Getenv("ENVIRONMENT") == "DEV") {
+		skipVerify = true
+	}
+	// skip verify to avoid x509 cert check if in dev env
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
 	}
 
 	client := &http.Client{Timeout: time.Second * 10, Transport: tr}
