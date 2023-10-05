@@ -65,7 +65,7 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	skipVerify := false
-	if os.Getenv("ENVIRONMENT") == "DEV") {
+	if os.Getenv("ENVIRONMENT") == "DEV" {
 		skipVerify = true
 	}
 	// skip verify to avoid x509 cert check if in dev env
