@@ -4,6 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - "GOOS=${GOOS}"
+      - "GOARCH={GOARCH}"
     image: poptape/reviews/api:v0.1
     ports:
       - "1244:8020"
