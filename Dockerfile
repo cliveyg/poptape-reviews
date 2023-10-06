@@ -13,7 +13,7 @@ RUN go mod tidy
 RUN go mod download
 
 # need these flags or alpine image won't run due to dynamically linked libs in binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-w' -o reviews
+RUN CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -a -ldflags '-w' -o reviews
 
 
 FROM alpine:latest
