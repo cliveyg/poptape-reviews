@@ -1,0 +1,14 @@
+name: Run test suite
+on: push
+
+jobs:
+  run-tests:
+    name: Run Go tests
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+      volumes:
+        - ${{ github.workspace }}:/app
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
