@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine as build
+FROM golang:1.21-alpine as build
 
 RUN apk --no-cache add git
 
@@ -10,6 +10,7 @@ WORKDIR /app
 RUN rm -f go.mod go.sum
 RUN go mod init github.com/cliveyg/poptape-reviews
 RUN go mod tidy
+
 RUN go mod download
 
 # need these flags or alpine image won't run due to dynamically linked libs in binary
