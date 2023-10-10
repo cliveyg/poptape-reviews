@@ -14,11 +14,14 @@ import (
 
 // ----------------------------------------------------------------------------
 
-func (a *App) getStatus(w http.ResponseWriter, r *http.Request) {
+func (a *App) getStatus(w http.ResponseWriter) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	log.Print("WOOOOP")
 	mess := `{"message": "System running..."}`
-	io.WriteString(w, mess)
+	if _, err := io.WriteString(w, mess); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // ----------------------------------------------------------------------------
