@@ -51,28 +51,25 @@ jobs:
           rm -f go.mod go.sum
           go mod init github.com/cliveyg/poptape-reviews
           go mod tidy
-      # run go build and output binary to dev null as it's not used in ci
+      # run go build and output binary to dev null as it's not used for running unit tests
       - name: Run go build
         run: go build -o /dev/null ./...
-      #  env:
-      #    DB_USERNAME: testdb_user
-      #    DB_HOST: postgres
-      #    DB_PASSWORD: testdb_password
-      #    DB_NAME: testdb
       # have to create an .env file to be able to run unit tests as first
-      # unit test tests for existence of file
+      # unit test tests for existence of a .env file
       - name: 'Create env file for unit testing'
         run: |
           touch .env
-          echo TESTDB_HOST=localhost >> .env
+          echo TESTDB_HOST=postgres >> .env
           echo TESTDB_USERNAME=testdb_user >> .env
           echo TESTDB_PASSWORD=testdb_password >> .env
           echo TESTDB_NAME=testdb >> .env
+          echo AUTHYURL=https://poptape.club/authy/checkaccess/10 >> .env
+          echo AUCTIONURL=https://poptape.club/auctionhouse/auction/ >> .env
           cat .env
       # finally run go test    
-      #- name: Run go test and generate test coverage file
-      #  run: go test -v ./... -coverprofile=./cover.out      
-      # and check test coverage
+      - name: Run go test and generate test coverage file
+        run: go test -v ./... -coverprofile=./cover.out      
+      # and check test coverage percentage
       #- name: Check test coverage
       #  uses: vladopajic/go-test-coverage@v2
       #  with:
