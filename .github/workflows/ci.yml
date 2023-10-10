@@ -34,7 +34,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21.x'
-      - name: install go dependencies
-        run: |
-          go mod init github.com/cliveyg/poptape-reviews
-          go mod tidy
+      # - name: install go dependencies
+      #  run: |
+      #    go mod init github.com/cliveyg/poptape-reviews
+      #    go mod tidy
