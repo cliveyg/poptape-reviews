@@ -160,6 +160,7 @@ type CreateResp struct {
 
 func TestAPIStatus(t *testing.T) {
 
+	fmt.Println("TestAPIStatus")
 	req, _ := http.NewRequest("GET", "/reviews/status", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
