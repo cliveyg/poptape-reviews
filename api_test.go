@@ -72,6 +72,15 @@ func runSQL(sqltext string) {
 	}
 }
 
+func getRecCount() (count int) {
+	rows, err := a.DB.Query("SELECT COUNT(*) FROM reviews")
+	if err != nil {
+		log.Fatal(err)
+	}
+	rows.Scan(&count)
+	return count
+}
+
 const dropTable = `DROP TABLE IF EXISTS reviews`
 
 const tableCreationQuery = `CREATE TABLE IF NOT EXISTS reviews
@@ -206,6 +215,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 	clearTable()
 	runSQL(insertDummyReviews)
+	recCount := getRecCount()
+	log.Printf("No. of records in reviews table is %d", recCount)
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
