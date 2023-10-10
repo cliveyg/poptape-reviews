@@ -10,7 +10,7 @@ jobs:
       postgres:
         # dockerhub image
         image: postgres
-        # Provide the password for postgres
+        # provide the login deets for postgres
         env:
           POSTGRES_PASSWORD: testpass
           POSTGRES_USER: poptape_reviews_test
@@ -28,6 +28,9 @@ jobs:
       volumes:
         - ${{ github.workspace }}:/app
     steps:
+      - name: Install ca certs dep
+        run: |
+          apt-get update && apt-get install --yes --no-install-recommends ca-certificates
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Set up Go
@@ -36,9 +39,9 @@ jobs:
           go-version: '1.21.x'
       - name: install go dependencies
         run: |
-      #    rm -f go.mod go.sum
-      #    go mod init github.com/cliveyg/poptape-reviews
-      #    go mod tidy
-           go get github.com/gorilla/mux
-      #    go mod init github.com/cliveyg/poptape-reviews
-      #    go mod tidy
+          #    rm -f go.mod go.sum
+          #    go mod init github.com/cliveyg/poptape-reviews
+          #    go mod tidy
+          go get github.com/gorilla/mux
+          # go get github.com/google/uuid
+
