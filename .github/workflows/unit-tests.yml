@@ -7,7 +7,6 @@ on:
   schedule:
   - cron: '0 10 * * 1' # run "At 10:00 on Monday"
 
-
 jobs:
   unit-tests:
     name: Run unit tests
@@ -52,7 +51,7 @@ jobs:
           rm -f go.mod go.sum
           go mod init github.com/cliveyg/poptape-reviews
           go mod tidy
-      # Run go build and output binary to dev null as it's not used in ci
+      # run go build and output binary to dev null as it's not used in ci
       - name: Run go build
         run: go build -o /dev/null ./...
         env:
@@ -60,3 +59,25 @@ jobs:
           DB_USERNAME: testdb_user
           DB_PASSWORD: testdb_password
           DB_NAME: testdb
+      # have to create an .env file to be able to run unit tests as first
+      # unit test tests for existence of file
+      - name: 'Create env file for unit testing'
+        run: |
+          touch .env
+          echo DB_HOST=localhost >> .env
+          echo DB_USERNAME=testdb_user >> .env
+          echo DB_PASSWORD=testdb_password >> .env
+          echo DB_NAME=testdb >> .env
+          cat .env
+      # finally run go test    
+      #- name: Run go test and generate test coverage file
+      #  run: go test ./... -coverprofile=./cover.out      
+      # and check test coverage
+      #- name: Check test coverage
+      #  uses: vladopajic/go-test-coverage@v2
+      #  with:
+      #    profile: cover.out
+      #    local-prefix: github.com/org/project
+      #    threshold-file: 80
+      #    threshold-package: 80
+      #    threshold-total: 95          
