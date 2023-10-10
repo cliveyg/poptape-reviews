@@ -17,26 +17,27 @@ jobs:
       postgres:
         # dockerhub image
         image: postgres
-        # provide the login deets for postgres
+        # provide the login and db deets for postgres
         env:
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_USER: poptape_reviews_test
+          POSTGRES_DB: testdb
+          POSTGRES_PASSWORD: testdb_password
+          POSTGRES_USER: testdb_user
+        ports:
+          # maps tcp port 5432 on service container to the host
+          - 5432:5432
         # set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          # maps tcp port 5432 on service container to the host
-          - 5432:5432    
     container:
       image: ubuntu:latest
       volumes:
         - ${{ github.workspace }}:/app
     steps:
-      # add install ca certs step to prevent tls error messages when installing
-      # golang deps
+      # add install ca certs step to prevent tls error messages
+      # when installing golang deps
       - name: Install ca certs dep
         run: |
           apt-get update && apt-get install --yes --no-install-recommends ca-certificates
@@ -46,11 +47,16 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21.x'
-      - name: install go dependencies
+      - name: Install Go dependencies
         run: |
           rm -f go.mod go.sum
           go mod init github.com/cliveyg/poptape-reviews
           go mod tidy
-          # go get github.com/gorilla/mux
-          # go get github.com/google/uuid
-
+      # Run go build and output binary to dev null as it's not used in ci
+      - name: Run go build
+        run: go build -o /dev/null ./...
+        env:
+          DB_HOST: postgres
+          DB_USERNAME: testdb_user
+          DB_PASSWORD: testdb_password
+          DB_NAME: testdb
