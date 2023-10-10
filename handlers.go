@@ -143,7 +143,10 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
 
 	if !IsValidUUID(reviewId) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Not a valid review ID" }`)
+		mess := `{ "message": "Not a valid review ID" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -152,7 +155,10 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess :=`{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -173,7 +179,9 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := bouncerSaysOk(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	publicId := mess
@@ -183,10 +191,17 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	if err := decoder.Decode(&rev); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mess = fmt.Sprintf("{ \"error\": \"%s\" }", err)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(r.Body)
 
 	reviewId, err := uuid.NewRandom()
 	if err != nil {
@@ -199,7 +214,10 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	x := r.Header.Get("X-Access-Token")
 	if !ValidAuction(rev.AuctionId, publicId, x) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Auction does not exist" }`)
+		mess := `{ "message": "Auction does not exist" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	/*
@@ -214,12 +232,17 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	if err := rev.createReview(a.DB); err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess := `{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	mess = fmt.Sprintf("{ \"review_id\": \"%s\" }", rev.ReviewId)
-	io.WriteString(w, mess)
+	if _, err := io.WriteString(w, mess); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -231,7 +254,9 @@ func (a *App) getAllReviewsByAuction(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := CheckRequest(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	vars := mux.Vars(r)
@@ -239,7 +264,10 @@ func (a *App) getAllReviewsByAuction(w http.ResponseWriter, r *http.Request) {
 
 	if !IsValidUUID(auctionId) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Not a valid auction ID" }`)
+		mess := `{ "message": "Not a valid auction ID" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -257,7 +285,10 @@ func (a *App) getAllReviewsByAuction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess := `{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -267,7 +298,9 @@ func (a *App) getAllReviewsByAuction(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-	w.Write(jsonData)
+	if _, err := w.Write(jsonData); err != nil {
+		log.Fatal(err)
+	}
 
 }
 
@@ -280,7 +313,9 @@ func (a *App) getReviewByItem(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := CheckRequest(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	vars := mux.Vars(r)
@@ -288,7 +323,10 @@ func (a *App) getReviewByItem(w http.ResponseWriter, r *http.Request) {
 
 	if !IsValidUUID(itemId) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Not a valid item ID" }`)
+		mess := `{ "message": "Not a valid item ID" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -300,14 +338,19 @@ func (a *App) getReviewByItem(w http.ResponseWriter, r *http.Request) {
 		default:
 			log.Print(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+			mess := `{ "message": "Oopsy somthing went wrong" }`
+			if _, err := io.WriteString(w, mess); err != nil {
+				log.Fatal(err)
+			}
 		}
 		return
 	}
 
 	jsonData, _ := json.Marshal(rev)
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	if _, err := w.Write(jsonData); err != nil {
+		log.Fatal(err)
+	}
 
 }
 
@@ -320,7 +363,9 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := CheckRequest(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	vars := mux.Vars(r)
@@ -328,7 +373,10 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
 
 	if !IsValidUUID(publicId) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Not a valid public ID" }`)
+		mess := `{ "message": "Not a valid public ID" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -338,12 +386,17 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Print(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+			mess := `{ "message": "Oopsy somthing went wrong" }`
+			if _, err := io.WriteString(w, mess); err != nil {
+				log.Fatal(err)
+			}
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 		mess := fmt.Sprintf("{ \"total_reviews\": \"%d\" }", total)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -361,7 +414,10 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess := `{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -371,7 +427,9 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-	w.Write(jsonData)
+	if _, err := w.Write(jsonData); err != nil {
+		log.Fatal(err)
+	}
 
 }
 
@@ -384,7 +442,9 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := CheckRequest(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	vars := mux.Vars(r)
@@ -392,7 +452,10 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 
 	if !IsValidUUID(publicId) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Not a valid public ID" }`)
+		mess := `{ "message": "Not a valid public ID" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -402,12 +465,17 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Print(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+			mess :=`{ "message": "Oopsy somthing went wrong" }`
+			if _, err := io.WriteString(w, mess); err != nil {
+				log.Fatal(err)
+			}
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 		mess := fmt.Sprintf("{ \"total_reviews\": \"%d\" }", total)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -425,7 +493,10 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess := `{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -435,7 +506,9 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-	w.Write(jsonData)
+	if _, err := w.Write(jsonData); err != nil {
+		log.Fatal(err)
+	}
 
 }
 
@@ -448,7 +521,9 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := CheckRequest(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	vars := mux.Vars(r)
@@ -456,7 +531,10 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 
 	if !IsValidUUID(publicId) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Not a valid public ID" }`)
+		mess := `{ "message": "Not a valid public ID" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -465,7 +543,10 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess := `{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -474,7 +555,10 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess := `{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -482,7 +566,10 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		mess := `{ "message": "Oopsy somthing went wrong" }`
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -492,6 +579,8 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	multiline := "{ \"total_reviews_of\": " + strconv.Itoa(totalReviewsOf) + " ,\n" +
 		" \"total_reviews_by\": " + strconv.Itoa(totalReviewedBy) + " ,\n" +
 		" \"calculated_score\": " + strconv.Itoa(calculatedScore) + " }"
-	io.WriteString(w, multiline)
+	if _, err := io.WriteString(w, multiline); err != nil {
+		log.Fatal(err)
+	}
 	return
 }
