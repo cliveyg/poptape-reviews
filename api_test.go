@@ -163,7 +163,7 @@ func TestAPIStatus(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
-	fmt.Sprintf("Resp body is %s",response.Body.String())
+	fmt.Println(fmt.Sprintf("Resp body is %s",response.Body.String()))
 
 	if checkResponseCode(t, http.StatusOK, response.Code) {
 		fmt.Println("[PASS].....TestAPIStatus")
