@@ -1,6 +1,10 @@
 name: Build and test
 on: push
 
+env:
+  GOPROXY: github.com/cliveyg/poptape-reviews
+  GOPATH: ${{ github.workspace }}
+
 jobs:
   unit-tests:
     name: Run unit tests
