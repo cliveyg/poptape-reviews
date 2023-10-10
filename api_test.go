@@ -3,10 +3,10 @@
 package main_test
 
 import (
-	"github.com/cliveyg/poptape-reviews"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/cliveyg/poptape-reviews"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"log"
@@ -23,6 +23,8 @@ func TestMain(m *testing.M) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	} else {
+		log.Println("Loaded .env file")
 	}
 
 	a = main.App{}
