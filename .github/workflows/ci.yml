@@ -36,5 +36,6 @@ jobs:
           go-version: '1.21.x'
       - name: install go dependencies
         run: |
-          go mod init github.com/cliveyg/poptape-reviews
-          go mod tidy
+          # go mod init github.com/cliveyg/poptape-reviews
+          #go mod tidy
+          go get github.com/gorilla/mux
