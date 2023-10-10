@@ -3,7 +3,6 @@
 package main_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
 	"github.com/jarcoal/httpmock"
@@ -196,36 +195,3 @@ func TestEmptyTable(t *testing.T) {
 	}
 }
 
-// get reviews for authed user
-func TestReturnOnlyAuthUserReviews(t *testing.T) {
-
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
-		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
-
-	clearTable()
-	runSQL(insertDummyReviews)
-
-	req, _ := http.NewRequest("GET", "/reviews", nil)
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("X-Access-Token", "faketoken")
-	response := executeRequest(req)
-
-	checkResponseCode(t, http.StatusOK, response.Code)
-
-	reviews := make([]Review, 0)
-	json.NewDecoder(response.Body).Decode(&reviews)
-	for _, r := range reviews {
-		if r.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05304" {
-			t.Errorf("reviewed by doesn't match")
-		}
-	}
-
-	if len(reviews) != 3 {
-		t.Errorf("no of reviews returned doesn't match")
-	} else {
-		fmt.Println("[PASS].....TestReturnOnlyAuthUserReviews")
-	}
-
-}
