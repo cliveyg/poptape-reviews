@@ -54,24 +54,19 @@ jobs:
       # run go build and output binary to dev null as it's not used in ci
       - name: Run go build
         run: go build -o /dev/null ./...
-      #  env:
-      #    DB_USERNAME: testdb_user
-      #    DB_HOST: postgres
-      #    DB_PASSWORD: testdb_password
-      #    DB_NAME: testdb
       # have to create an .env file to be able to run unit tests as first
-      # unit test tests for existence of file
+      # unit test tests for existence of a .env file
       - name: 'Create env file for unit testing'
         run: |
           touch .env
-          echo TESTDB_HOST=localhost >> .env
+          echo TESTDB_HOST=postgres >> .env
           echo TESTDB_USERNAME=testdb_user >> .env
           echo TESTDB_PASSWORD=testdb_password >> .env
           echo TESTDB_NAME=testdb >> .env
           cat .env
       # finally run go test    
-      #- name: Run go test and generate test coverage file
-      #  run: go test -v ./... -coverprofile=./cover.out      
+      - name: Run go test and generate test coverage file
+        run: go test -v ./... -coverprofile=./cover.out      
       # and check test coverage
       #- name: Check test coverage
       #  uses: vladopajic/go-test-coverage@v2
