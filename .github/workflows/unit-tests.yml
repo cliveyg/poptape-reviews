@@ -63,8 +63,13 @@ jobs:
       # finally run go test    
       - name: Run go test and generate test coverage file
         run: go test ./... -coverprofile=./cover.out
+        env:
+          DB_HOST: postgres
+          DB_USERNAME: testdb_user
+          DB_PASSWORD: testdb_password
+          DB_NAME: testdb        
       # and check test coverage
-      - name: check test coverage
+      - name: Check test coverage
         uses: vladopajic/go-test-coverage@v2
         with:
           profile: cover.out
