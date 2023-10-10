@@ -39,7 +39,7 @@ jobs:
       # when installing golang deps
       - name: Install ca certs dep
         run: |
-          apt-get update && apt-get install --yes --no-install-recommends ca-certificates
+          apt-get update && apt-get install --yes --no-install-recommends ca-certificates postgresql-client
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Set up Go
@@ -54,6 +54,10 @@ jobs:
       # run go build and output binary to dev null as it's not used for running unit tests
       - name: Run go build
         run: go build -o /dev/null ./...
+      - name: Query database
+        run: psql -h postgres -d testdb -U testdb_username -c 'SELECT 1;'
+        env:
+          PGPASSWORD: testdb_password
       # have to create an .env file to be able to run unit tests as first
       # unit test tests for existence of a .env file
       - name: 'Create env file for unit testing'
