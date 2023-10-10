@@ -43,5 +43,5 @@ jobs:
           #    go mod init github.com/cliveyg/poptape-reviews
           #    go mod tidy
           go get github.com/gorilla/mux
-          # go get github.com/google/uuid
+          go get github.com/google/uuid
 
