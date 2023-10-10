@@ -11,6 +11,10 @@ jobs:
   unit-tests:
     name: Run unit tests
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+      volumes:
+        - ${{ github.workspace }}:/app
     services:
       # label used to access the service container
       postgres:
@@ -30,16 +34,16 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    container:
-      image: ubuntu:latest
-      volumes:
-        - ${{ github.workspace }}:/app
     steps:
       # add install ca certs step to prevent tls error messages
       # when installing golang deps
       - name: Install ca certs dep
         run: |
-          apt-get update && apt-get install --yes --no-install-recommends ca-certificates
+          apt-get update && apt-get install --yes --no-install-recommends ca-certificates postgresql-client
+      - name: Query database
+        run: psql -h postgres -d testdb -U testdb_user -c 'SELECT 1;'
+        env:
+          PGPASSWORD: testdb_password
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Set up Go
