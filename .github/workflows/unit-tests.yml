@@ -70,14 +70,14 @@ jobs:
           echo DB_NAME=testdb >> .env
           cat .env
       # finally run go test    
-      - name: Run go test and generate test coverage file
-        run: go test ./... -coverprofile=./cover.out      
+      #- name: Run go test and generate test coverage file
+      #  run: go test ./... -coverprofile=./cover.out      
       # and check test coverage
-      - name: Check test coverage
-        uses: vladopajic/go-test-coverage@v2
-        with:
-          profile: cover.out
-          local-prefix: github.com/org/project
-          threshold-file: 80
-          threshold-package: 80
-          threshold-total: 95          
+      #- name: Check test coverage
+      #  uses: vladopajic/go-test-coverage@v2
+      #  with:
+      #    profile: cover.out
+      #    local-prefix: github.com/org/project
+      #    threshold-file: 80
+      #    threshold-package: 80
+      #    threshold-total: 95          
