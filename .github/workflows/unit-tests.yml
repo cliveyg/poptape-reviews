@@ -64,7 +64,7 @@ jobs:
       - name: 'Create env file for unit testing'
         run: |
           touch .env
-          echo DB_HOST=postgres >> .env
+          echo DB_HOST=localhost >> .env
           echo DB_USERNAME=testdb_user >> .env
           echo DB_PASSWORD=testdb_password >> .env
           echo DB_NAME=testdb >> .env
