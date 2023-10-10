@@ -63,6 +63,8 @@ jobs:
           echo TESTDB_USERNAME=testdb_user >> .env
           echo TESTDB_PASSWORD=testdb_password >> .env
           echo TESTDB_NAME=testdb >> .env
+          echo AUTHYURL=https://poptape.club/authy/checkaccess/10 >> .env
+          echo AUCTIONURL=https://poptape.club/auctionhouse/auction/ >> .env
           cat .env
       # finally run go test    
       - name: Run go test and generate test coverage file
