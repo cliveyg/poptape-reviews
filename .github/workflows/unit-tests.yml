@@ -30,10 +30,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    #container:
-    #  image: ubuntu:latest
-    #  volumes:
-    #    - ${{ github.workspace }}:/app
+    container:
+      image: ubuntu:latest
+      volumes:
+        - ${{ github.workspace }}:/app
     steps:
       # add install ca certs step to prevent tls error messages
       # when installing golang deps
