@@ -5,6 +5,7 @@ package main_test
 import (
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
+	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -170,9 +171,26 @@ func TestAPIStatus(t *testing.T) {
 	}
 }
 
-//func TestDB(t *testing.T) {
-//
-//	runSQL(insertDummyReviews)
-//	sqlString := "SELECT COUNT(*) FROM reviews""
-//	runSQL(sqlString)
-//}
+// get no reviews for authed user
+func TestEmptyTable(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if body := response.Body.String(); body != "[]" {
+		t.Errorf("Expected an empty array. Got %s", body)
+	}
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....TestEmptyTable")
+	}
+}
