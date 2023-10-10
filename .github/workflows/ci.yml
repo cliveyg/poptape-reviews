@@ -43,5 +43,5 @@ jobs:
           GOPROXY: proxy.golang.org,direct
         run: |
           rm -f go.mod go.sum
-          go mod init github.com/cliveyg/poptape-reviews
+          go mod init
           go mod tidy
