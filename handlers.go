@@ -14,7 +14,7 @@ import (
 
 // ----------------------------------------------------------------------------
 
-func (a *App) getStatus(w http.ResponseWriter) {
+func (a *App) getStatus(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	log.Print("WOOOOP")
@@ -22,6 +22,7 @@ func (a *App) getStatus(w http.ResponseWriter) {
 	if _, err := io.WriteString(w, mess); err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 // ----------------------------------------------------------------------------
