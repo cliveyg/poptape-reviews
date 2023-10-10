@@ -36,5 +36,6 @@ jobs:
           go-version: '1.21.x'
       - name: install go dependencies
         run: |
+          rm -f go.mod go.sum
           go mod init github.com/cliveyg/poptape-reviews
           go mod tidy
