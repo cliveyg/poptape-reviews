@@ -59,7 +59,9 @@ func checkResponseCode(t *testing.T, expected, actual int) bool {
 }
 
 func clearTable() {
-	a.DB.Exec("DELETE FROM reviews")
+	if _, err := a.DB.Exec("DELETE FROM reviews"); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func runSQL(sqltext string) {
@@ -161,8 +163,16 @@ func TestAPIStatus(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
+	fmt.Println("Resp body is %s",response.Body.String())
+
 	if checkResponseCode(t, http.StatusOK, response.Code) {
 		fmt.Println("[PASS].....TestAPIStatus")
 	}
 }
 
+//func TestDB(t *testing.T) {
+//
+//	runSQL(insertDummyReviews)
+//	sqlString := "SELECT COUNT(*) FROM reviews""
+//	runSQL(sqlString)
+//}
