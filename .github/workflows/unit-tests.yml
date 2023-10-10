@@ -51,7 +51,7 @@ jobs:
           rm -f go.mod go.sum
           go mod init github.com/cliveyg/poptape-reviews
           go mod tidy
-      # run go build and output binary to dev null as it's not used in ci
+      # run go build and output binary to dev null as it's not used for running unit tests
       - name: Run go build
         run: go build -o /dev/null ./...
       # have to create an .env file to be able to run unit tests as first
