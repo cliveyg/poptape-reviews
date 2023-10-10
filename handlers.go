@@ -14,11 +14,14 @@ import (
 
 // ----------------------------------------------------------------------------
 
-func (a *App) getStatus(w http.ResponseWriter, r *http.Request) {
+func (a *App) getStatus(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	mess := `{"message": "System running..."}`
-	io.WriteString(w, mess)
+	if _, err := io.WriteString(w, mess); err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 // ----------------------------------------------------------------------------
@@ -30,7 +33,9 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := bouncerSaysOk(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	// successfully authenticated which means mess is the public_id
@@ -50,7 +55,9 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+		if _, err := io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -60,7 +67,9 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-	w.Write(jsonData)
+	if _, err := w.Write(jsonData); err != nil {
+		log.Fatal(err)
+	}
 
 }
 
@@ -73,7 +82,9 @@ func (a *App) getReview(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := CheckRequest(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -82,7 +93,9 @@ func (a *App) getReview(w http.ResponseWriter, r *http.Request) {
 
 	if !IsValidUUID(reviewId) {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{ "message": "Not a valid review ID" }`)
+		if _, err := io.WriteString(w, `{ "message": "Not a valid review ID" }`); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -94,14 +107,18 @@ func (a *App) getReview(w http.ResponseWriter, r *http.Request) {
 		default:
 			log.Print(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`)
+			if _, err := io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`); err != nil {
+				log.Fatal(err)
+			}
 		}
 		return
 	}
 
 	jsonData, _ := json.Marshal(rev)
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	if _, err := w.Write(jsonData); err != nil {
+		log.Fatal(err)
+	}
 
 }
 
@@ -114,7 +131,9 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
 	b, st, mess := bouncerSaysOk(r)
 	if !b {
 		w.WriteHeader(st)
-		io.WriteString(w, mess)
+		if _, err := io.WriteString(w, mess); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 	publicId := mess
