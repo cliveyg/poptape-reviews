@@ -214,6 +214,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	clearTable()
+	runSQL(tableCreationQuery)
 	runSQL(insertDummyReviews)
 	recCount := getRecCount()
 	log.Printf("No. of records in reviews table is %d", recCount)
