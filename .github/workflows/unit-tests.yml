@@ -30,10 +30,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    container:
-      image: ubuntu:latest
-      volumes:
-        - ${{ github.workspace }}:/app
+    #container:
+    #  image: ubuntu:latest
+    #  volumes:
+    #    - ${{ github.workspace }}:/app
     steps:
       # add install ca certs step to prevent tls error messages
       # when installing golang deps
@@ -57,7 +57,7 @@ jobs:
       - name: Query database
         run: psql -h postgres -d testdb -U testdb_username -c 'SELECT 1;'
         env:
-          POSTGRES_PASSWORD: testdb_password
+          PGPASSWORD: testdb_password
       # have to create an .env file to be able to run unit tests as first
       # unit test tests for existence of a .env file
       - name: 'Create env file for unit testing'
