@@ -116,7 +116,8 @@ func (a *App) getReview(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			w.WriteHeader(http.StatusNotFound)
 		default:
-			log.Print(err.Error())
+			log.Println("***********************************")
+			log.Print("Error is" + err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			if _, err := io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`); err != nil {
 				log.Fatal(err)
