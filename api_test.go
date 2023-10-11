@@ -379,7 +379,8 @@ func TestGetReviewsByAuction(t *testing.T) {
 	reviews := make([]Review, 0)
 	err := json.NewDecoder(response.Body).Decode(&reviews)
 	if err != nil {
-		t.Fatal(err)
+		noError = false
+		t.Errorf("Error decoding JSON: " + err.Error())
 	}
 
 	if len(reviews) != 2 {
@@ -406,7 +407,8 @@ func TestGetReviewById(t *testing.T) {
 	var rev Review
 	err := json.NewDecoder(response.Body).Decode(&rev)
 	if err != nil {
-		t.Fatal(err)
+		noError = false
+		t.Errorf("Error decoding JSON: " + err.Error())
 	}
 
 	if rev.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05000" {
@@ -418,3 +420,33 @@ func TestGetReviewById(t *testing.T) {
 	}
 }
 
+// get review by item - no auth needed
+func TestGetReviewByItem(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/item/7d1aa876-9be8-441f-ad86-d86e5faddd81", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var rev Review
+	err := json.NewDecoder(response.Body).Decode(&rev)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding JSON: " + err.Error())
+	}
+
+	if rev.ReviewId != "e8f48256-2460-418f-81b7-86dad2aa6aaa" {
+		noError = false
+		t.Errorf("review id doesn't match")
+	}
+	if rev.ItemId != "7d1aa876-9be8-441f-ad86-d86e5faddd81" {
+		noError = false
+		t.Errorf("item id doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewByItem")
+	}
+}
