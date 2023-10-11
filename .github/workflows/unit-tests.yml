@@ -89,7 +89,6 @@ jobs:
             echo "-----------------------------------------------------------"
 
             if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') )); then
-            then
                 echo "OK"
             else
                 echo "Current test coverage is below threshold. Please add more unit tests or adjust threshold to a lower value."
