@@ -36,7 +36,6 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusUnauthorized, badmess
 		}
 
-		log.Print(fmt.Sprintf("X-Access-Token [%s]", x))
 		req.Header.Set("X-Access-Token", x)
 		req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -48,11 +47,12 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusServiceUnavailable, badmess
 		} else {
 			defer resp.Body.Close()
-			//bodyBytes, _ := ioutil.ReadAll(resp.Body)
-			//log.Print(string(bodyBytes))
 			if resp.StatusCode == 200 {
 				var u user
-				json.NewDecoder(resp.Body).Decode(&u)
+				if err := json.NewDecoder(resp.Body).Decode(&u); err != nil {
+					log.Printf("error deserializing JSON: %v", err)
+					return false, http.StatusBadRequest, `{"message": "Unable to decode response body"}`
+				}
 				return true, http.StatusOK, u.PublicId
 			}
 		}

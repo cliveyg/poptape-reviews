@@ -3,6 +3,8 @@
 package main_test
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
 	"github.com/jarcoal/httpmock"
@@ -71,14 +73,21 @@ func runSQL(sqltext string) {
 	}
 }
 
-func getRecCount() (count int) {
-	rows, err := a.DB.Query("SELECT COUNT(*) FROM reviews")
+func getRecCount() int {
+
+	rows, err := a.DB.Query("SELECT COUNT(*) AS count FROM reviews")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = rows.Scan(&count)
-	if err != nil {
-		log.Fatal(err)
+	return checkCount(rows)
+}
+
+func checkCount(rows *sql.Rows) (count int) {
+	for rows.Next() {
+		err:= rows.Scan(&count)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return count
 }
@@ -189,7 +198,7 @@ func TestEmptyTable(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
-		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	clearTable()
 
@@ -206,6 +215,63 @@ func TestEmptyTable(t *testing.T) {
 		fmt.Println("[PASS].....TestEmptyTable")
 	}
 
-	runSQL(insertDummyReviews)
 }
 
+// get reviews for authed user
+func TestReturnOnlyAuthUserReviews(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	reviews := make([]Review, 0)
+	json.NewDecoder(response.Body).Decode(&reviews)
+
+	if len(reviews) != 3 {
+		t.Errorf("no of reviews returned doesn't match should be 3 but is %d", len(reviews))
+		noError = false
+	}
+
+	for _, r := range reviews {
+		if r.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05304" {
+			t.Errorf("reviewed by doesn't match")
+			noError = false
+		}
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestReturnOnlyAuthUserReviews")
+	}
+
+}
+
+// test missing access token
+func TestMissingXAccessToken(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+	
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
+		fmt.Println("[PASS].....TestMissingXAccessToken")
+	}
+}
