@@ -362,3 +362,59 @@ func Test404ForRandomURL(t *testing.T) {
 		fmt.Println("[PASS].....Test404ForRandomURL")
 	}
 }
+
+// get reviews by auction - no auth needed
+func TestGetReviewsByAuction(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/auction/e77be9e0-bb00-49bc-9e7d-d7cc7072ab8c", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	reviews := make([]Review, 0)
+	err := json.NewDecoder(response.Body).Decode(&reviews)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(reviews) != 2 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByAuction")
+	}
+}
+
+// get review by id - no auth needed
+func TestGetReviewById(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6333", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var rev Review
+	err := json.NewDecoder(response.Body).Decode(&rev)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rev.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05000" {
+		noError = false
+		t.Errorf("reviewed by doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewById")
+	}
+}
+
