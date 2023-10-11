@@ -199,8 +199,7 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	publicId := mess
 
 	var rev Review
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&rev); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&rev); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mess = fmt.Sprintf("{ \"error\": \"%s\" }", err)
 		if _, err := io.WriteString(w, mess); err != nil {

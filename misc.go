@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -23,6 +22,8 @@ func IsValidUUID(u string) bool {
 func ValidAuction(auctionId, publicId, x string) bool {
 
 	fullURL := GetURL("AUCTIONURL") + auctionId
+	log.Println("FULL URL is "+fullURL)
+	log.Println("publicId is "+publicId)
 	return ValidThing(fullURL, x, "auction", publicId)
 }
 
@@ -61,20 +62,35 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 		log.Print(err)
 		return false
 	}
+
 	req.Header.Set("X-Access-Token", x)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
-	skipVerify := false
-	if os.Getenv("ENVIRONMENT") == "DEV" {
-		skipVerify = true
-	}
-	// skip verify to avoid x509 cert check if in dev env
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
-	}
-
-	client := &http.Client{Timeout: time.Second * 10, Transport: tr}
+	client := &http.Client{Timeout: time.Second * 10}
 	resp, e := client.Do(req)
+
+	//NB Going to leave this commented code here for the moment
+	// removed so as to pass tests using httpmock
+	//req, err := http.NewRequest("GET", URL, nil)
+	//if err != nil {
+	//	log.Print(err)
+	//	return false
+	//}
+	//req.Header.Set("X-Access-Token", x)
+	//req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	//skipVerify := false
+	//if os.Getenv("ENVIRONMENT") == "DEV" {
+	//	//log.Println("skipVerify set to true")
+	//	skipVerify = true
+	//}
+	// skip verify to avoid x509 cert check if in dev env
+	//tr := &http.Transport{
+	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
+	//}
+
+	//client := &http.Client{Timeout: time.Second * 10, Transport: tr}
+	//resp, e := client.Do(req)
 	if e != nil {
 		log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
 		return false
@@ -82,9 +98,10 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 		defer resp.Body.Close()
 		//TODO: check if auction finished and user won
 		// when thingType is 'auction'
-		if thingType == "auction:" {
-			UUID = ""
+		if thingType == "auction" {
+			log.Printf("Input UUID is [%s]",UUID)
 		}
+		//log.Printf("Response status code is [%d]",resp.StatusCode)
 		if resp.StatusCode == 200 {
 			return true
 		}

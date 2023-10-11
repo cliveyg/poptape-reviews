@@ -3,6 +3,7 @@
 package main_test
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -574,7 +575,7 @@ func TestDeleteNotAuthedFail(t *testing.T) {
 
 	clearTable()
 	runSQL(insertDummyReviews)
-	
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
@@ -588,4 +589,49 @@ func TestDeleteNotAuthedFail(t *testing.T) {
 	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
 		fmt.Println("[PASS].....TestDeleteNotAuthedFail")
 	}
+}
+
+// test review creation
+func TestCreateReviewOk(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+	oldRecCnt := getRecCount()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+
+	//auction_id, review, overall, pap_cost, communication, as_described)
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
+	var crep CreateResp
+	err := json.NewDecoder(response.Body).Decode(&crep)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding JSON: " + err.Error())
+	}
+
+	if getRecCount() != oldRecCnt + 1 {
+		noError = false
+		t.Errorf("Before and after record counts out by more than +1")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewOk")
+	}
+	log.Printf("Total call count is %d",httpmock.GetTotalCallCount())
+
 }
