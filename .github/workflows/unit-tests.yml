@@ -67,6 +67,7 @@ jobs:
           echo TESTDB_USERNAME=testdb_user >> .env
           echo TESTDB_PASSWORD=testdb_password >> .env
           echo TESTDB_NAME=testdb >> .env
+          echo ENVIRONMENT=DEV >> .env
           echo AUTHYURL=https://poptape.club/authy/checkaccess/10 >> .env
           echo AUCTIONURL=https://poptape.club/auctionhouse/auction/ >> .env
           cat .env
