@@ -330,3 +330,35 @@ func TestBadUUID(t *testing.T) {
 		fmt.Println("[PASS].....TestBadUUID")
 	}
 }
+
+// test 404
+func Test404ForValidUUID(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf05311", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....Test404ForValidUUID")
+	}
+}
+
+// test 404
+func Test404ForRandomURL(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a/someurl/999", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....Test404ForRandomURL")
+	}
+}
