@@ -640,5 +640,6 @@ func TestCreateReviewOk(t *testing.T) {
 	if noError {
 		fmt.Println("[PASS].....TestCreateReviewOk")
 	}
+	log.Printf("Total call count is %d",httpmock.GetTotalCallCount())
 	httpmock.DeactivateAndReset()
 }
