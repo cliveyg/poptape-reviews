@@ -51,9 +51,11 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			defer resp.Body.Close()
 			bodyBytes, _ := io.ReadAll(resp.Body)
 			log.Println("Response body is " + string(bodyBytes))
+			log.Println("Response status code is " + string(resp.StatusCode))
 			if resp.StatusCode == 200 {
 				var u user
 				json.NewDecoder(resp.Body).Decode(&u)
+				log.Println("User deets are "+ u.PublicId)
 				return true, http.StatusOK, u.PublicId
 			}
 		}
