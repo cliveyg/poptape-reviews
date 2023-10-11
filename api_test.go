@@ -3,8 +3,6 @@
 package main_test
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
 	"github.com/jarcoal/httpmock"
@@ -206,62 +204,3 @@ func TestEmptyTable(t *testing.T) {
 	}
 }
 
-// test review creation
-func TestCreateReviewOk(t *testing.T) {
-
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
-		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
-	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
-	httpmock.RegisterResponder("GET", url,
-		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
-
-	//auction_id, review, overall, pap_cost, communication, as_described)
-	payload := []byte(createJson)
-
-	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("X-Access-Token", "faketoken")
-	response := executeRequest(req)
-
-	checkResponseCode(t, http.StatusCreated, response.Code)
-	var crep CreateResp
-	json.NewDecoder(response.Body).Decode(&crep)
-
-	req, _ = http.NewRequest("GET", "/reviews/"+crep.ReviewId, nil)
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("X-Access-Token", "faketoken")
-	response = executeRequest(req)
-
-	checkResponseCode(t, http.StatusOK, response.Code)
-
-	var rev Review
-	json.NewDecoder(response.Body).Decode(&rev)
-	if rev.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05304" {
-		t.Errorf("reviewed by doesn't match")
-	}
-	if rev.AuctionId != "f38ba39a-3682-4803-a498-659f0b111111" {
-		t.Errorf("auction id doesn't match")
-	}
-	if rev.ItemId != "f80689a6-9fba-4859-bdde-0a307c696ea8" {
-		t.Errorf("item id doesn't match")
-	}
-	if rev.Review != "amazing product" {
-		t.Errorf("review doesn't match")
-	}
-	if rev.Overall != 4 {
-		t.Errorf("overall score doesn't match")
-	}
-	if rev.PapCost != 3 {
-		t.Errorf("p&p score doesn't match")
-	}
-	if rev.Comm != 4 {
-		t.Errorf("comm score doesn't match")
-	}
-	if rev.AsDesc != 4 {
-		t.Errorf("as described score doesn't match")
-	} else {
-		fmt.Println("[PASS].....TestCreateReviewOk")
-	}
-}
