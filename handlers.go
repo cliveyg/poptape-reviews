@@ -45,14 +45,14 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// if error parsing eg; when running unit tests then default to 10
 		count = 10
-		log.Println("Error parsing count: ",err)
+		log.Println("Error parsing count: ", err)
 	}
 	var start int
 	start, err = strconv.Atoi(r.FormValue("start"))
 	if err != nil {
 		// if error parsing eg; when running unit tests then default to 0
 		start = 0
-		log.Println("Error parsing start: ",err)
+		log.Println("Error parsing start: ", err)
 	}
 
 	if count > 10 || count < 1 {
@@ -167,7 +167,7 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		mess :=`{ "message": "Oopsy somthing went wrong" }`
+		mess := `{ "message": "Oopsy somthing went wrong" }`
 		if _, err := io.WriteString(w, mess); err != nil {
 			log.Fatal(err)
 		}
@@ -210,7 +210,7 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-
+			log.Fatal(err)
 		}
 	}(r.Body)
 
@@ -476,7 +476,7 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Print(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
-			mess :=`{ "message": "Oopsy somthing went wrong" }`
+			mess := `{ "message": "Oopsy somthing went wrong" }`
 			if _, err := io.WriteString(w, mess); err != nil {
 				log.Fatal(err)
 			}

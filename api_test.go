@@ -85,7 +85,7 @@ func getRecCount() int {
 
 func checkCount(rows *sql.Rows) (count int) {
 	for rows.Next() {
-		err:= rows.Scan(&count)
+		err := rows.Scan(&count)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -186,7 +186,7 @@ func TestAPIStatus(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
-	fmt.Println(fmt.Sprintf("Resp body is %s",response.Body.String()))
+	fmt.Println(fmt.Sprintf("Resp body is %s", response.Body.String()))
 
 	if checkResponseCode(t, http.StatusOK, response.Code) {
 		fmt.Println("[PASS].....TestAPIStatus")
@@ -607,7 +607,6 @@ func TestCreateReviewOk(t *testing.T) {
 	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
-
 	//auction_id, review, overall, pap_cost, communication, as_described)
 	payload := []byte(createJson)
 
@@ -624,7 +623,7 @@ func TestCreateReviewOk(t *testing.T) {
 		t.Errorf("Error decoding JSON: " + err.Error())
 	}
 
-	if getRecCount() != oldRecCnt + 1 {
+	if getRecCount() != oldRecCnt+1 {
 		noError = false
 		t.Errorf("Before and after record counts out by more than +1")
 	}
@@ -632,7 +631,7 @@ func TestCreateReviewOk(t *testing.T) {
 	if noError {
 		fmt.Println("[PASS].....TestCreateReviewOk")
 	}
-	log.Printf("Total call count is %d",httpmock.GetTotalCallCount())
+	log.Printf("Total call count is %d", httpmock.GetTotalCallCount())
 
 }
 
