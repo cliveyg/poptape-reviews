@@ -596,6 +596,7 @@ func TestCreateReviewOk(t *testing.T) {
 
 	clearTable()
 	runSQL(insertDummyReviews)
+	oldRecCnt := getRecCount()
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -621,18 +622,25 @@ func TestCreateReviewOk(t *testing.T) {
 		t.Errorf("Error decoding JSON: " + err.Error())
 	}
 
+	if getRecCount() != oldRecCnt + 1 {
+		noError = false
+		t.Errorf("Before and after record counts out by more than +1")
+	}
+
 	req, _ = http.NewRequest("GET", "/reviews/"+crep.ReviewId, nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Set("X-Access-Token", "faketoken")
 	response = executeRequest(req)
 
 	noError = checkResponseCode(t, http.StatusOK, response.Code)
-
 	var rev Review
-	err = json.NewDecoder(response.Body).Decode(&rev)
-	if err != nil {
-		noError = false
-		t.Errorf("Error decoding JSON: " + err.Error())
+
+	if noError {
+		err := json.NewDecoder(response.Body).Decode(&rev)
+		if err != nil {
+			noError = false
+			t.Errorf("Error decoding JSON: " + err.Error())
+		}
 	}
 	if rev.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05304" {
 		noError = false
