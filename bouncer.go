@@ -49,7 +49,10 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusServiceUnavailable, badmess
 		} else {
 			defer resp.Body.Close()
-			bodyBytes, _ := io.ReadAll(resp.Body)
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
 			log.Println("Response body is " + string(bodyBytes))
 			log.Printf("Response status code is %d",resp.StatusCode)
 			if resp.StatusCode == 200 {
@@ -57,6 +60,7 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 				err := json.NewDecoder(resp.Body).Decode(&u)
 				if err != nil {
 					log.Println("Unable to decode response body")
+					log.Println(err)
 					return false, http.StatusBadRequest, `{"message": "Unable to decode response body"}`
 				}
 				log.Println("User deets are "+ u.PublicId)
