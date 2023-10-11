@@ -218,8 +218,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
 		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
-	runSQL(dropTable)
-	runSQL(tableCreationQuery)
+	//runSQL(dropTable)
+	//runSQL(tableCreationQuery)
 	runSQL(insertDummyReviews)
 
 	//recCount := getRecCount()
