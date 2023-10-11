@@ -44,6 +44,14 @@ jobs:
         run: psql -h postgres -d testdb -U testdb_user -c '\l'
         env:
           PGPASSWORD: testdb_password
+      - name: Update privileges for testdb_user
+        run: psql -h postgres -d testdb -U testdb_user -c 'GRANT ALL PRIVILEGES ON DATABASE testdb TO testdb_user'
+        env:
+          PGPASSWORD: testdb_password
+      - name: Show updated privileges
+        run: psql -h postgres -d testdb -U testdb_user -c '\l'
+        env:
+          PGPASSWORD: testdb_password
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Set up Go
