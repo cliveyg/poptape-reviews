@@ -40,7 +40,7 @@ jobs:
       - name: Install ca certs dep
         run: |
           apt-get update && apt-get install --yes --no-install-recommends ca-certificates postgresql-client
-      - name: Query database
+      - name: Query database 
         run: psql -h postgres -d testdb -U testdb_user -c 'SELECT 1;'
         env:
           PGPASSWORD: testdb_password
@@ -60,7 +60,7 @@ jobs:
         run: go build -o /dev/null ./...
       # have to create an .env file to be able to run unit tests as first
       # unit test tests for existence of a .env file
-      - name: 'Create env file for unit testing'
+      - name: Create .env file for unit testing
         run: |
           touch .env
           echo TESTDB_HOST=postgres >> .env
