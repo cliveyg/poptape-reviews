@@ -64,6 +64,7 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("**********")
 	log.Printf("start is %d and count is %d", start, count)
+	log.Println("publicId is "+ publicId)
 
 	reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
 	if err != nil {
