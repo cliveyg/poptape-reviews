@@ -39,19 +39,7 @@ jobs:
       # when installing golang deps
       - name: Install ca certs dep
         run: |
-          apt-get update && apt-get install --yes --no-install-recommends ca-certificates postgresql-client
-      #- name: Connect and query database 
-      #  run: psql -h postgres -d testdb -U testdb_user -c '\l'
-      #  env:
-      #    PGPASSWORD: testdb_password
-      #- name: Update privileges for testdb_user
-      #  run: psql -h postgres -d testdb -U testdb_user -c 'GRANT ALL PRIVILEGES ON DATABASE testdb TO testdb_user'
-      #  env:
-      #    PGPASSWORD: testdb_password
-      #- name: Show updated privileges
-      #  run: psql -h postgres -d testdb -U testdb_user -c '\l'
-      #  env:
-      #    PGPASSWORD: testdb_password
+          apt-get update && apt-get install --yes --no-install-recommends ca-certificates
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Set up Go
@@ -66,13 +54,6 @@ jobs:
       # run go build and output binary to dev null as it's not used for running unit tests
       - name: Run go build
         run: go build -o /dev/null ./...
-      #  env:
-      #    POSTGRES_DB: testdb
-      #    POSTGRES_PASSWORD: testdb_password
-      #    POSTGRES_USER: testdb_user
-      #    ENVIRONMENT: DEV
-      #    AUTHYURL: https://poptape.club/authy/checkaccess/10
-      #    AUCTIONURL: https://poptape.club/auctionhouse/auction/
       # have to create an .env file to be able to run unit tests 
       - name: Create .env file for unit testing
         run: |
@@ -86,13 +67,9 @@ jobs:
           echo AUCTIONURL=https://poptape.club/auctionhouse/auction/ >> .env
           echo ITEMURL=https://poptape.club/items/ >> .env
           cat .env
-      # finally run go test    
+      # run unit tests
       - name: Run go test and generate test coverage file
         run: go test -v ./... -coverprofile=./cover.out
-      - name: Test that data is in database 
-        run: psql -h postgres -d testdb -U testdb_user -c 'SELECT COUNT(*) FROM reviews'
-        env:
-          PGPASSWORD: testdb_password
       # and check test coverage percentage
       #- name: Check test coverage
       #  uses: vladopajic/go-test-coverage@v2
