@@ -58,8 +58,14 @@ jobs:
       # run go build and output binary to dev null as it's not used for running unit tests
       - name: Run go build
         run: go build -o /dev/null ./...
-      # have to create an .env file to be able to run unit tests as first
-      # unit test tests for existence of a .env file
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_PASSWORD: testdb_password
+          POSTGRES_USER: testdb_user
+          ENVIRONMENT: DEV
+          AUTHYURL: https://poptape.club/authy/checkaccess/10
+          AUCTIONURL: https://poptape.club/auctionhouse/auction/
+      # have to create an .env file to be able to run unit tests 
       - name: Create .env file for unit testing
         run: |
           touch .env
@@ -74,7 +80,7 @@ jobs:
       # finally run go test    
       - name: Run go test and generate test coverage file
         run: go test -v ./... -coverprofile=./cover.out
-      - name: Test data is in database 
+      - name: Test that data is in database 
         run: psql -h postgres -d testdb -U testdb_user -c 'SELECT COUNT(*) FROM reviews'
         env:
           PGPASSWORD: testdb_password
