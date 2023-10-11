@@ -201,6 +201,7 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	var rev Review
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&rev); err != nil {
+		log.Println("11111111111111111111")
 		w.WriteHeader(http.StatusBadRequest)
 		mess = fmt.Sprintf("{ \"error\": \"%s\" }", err)
 		if _, err := io.WriteString(w, mess); err != nil {
@@ -225,6 +226,7 @@ func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
 	// need to run these calls in parallel
 	x := r.Header.Get("X-Access-Token")
 	if !ValidAuction(rev.AuctionId, publicId, x) {
+		log.Println("22222222222222222")
 		w.WriteHeader(http.StatusBadRequest)
 		mess := `{ "message": "Auction does not exist" }`
 		if _, err := io.WriteString(w, mess); err != nil {
