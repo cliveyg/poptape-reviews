@@ -39,7 +39,7 @@ jobs:
       # when installing golang deps
       - name: Install ca certs dep
         run: |
-          apt-get update && apt-get install --yes --no-install-recommends ca-certificates curl
+          apt-get update && apt-get install --yes --no-install-recommends ca-certificates
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Set up Go
@@ -71,8 +71,3 @@ jobs:
       - name: Run go test and generate test coverage file
         run: go test -v ./... -coverprofile=./cover.out
       # and check test coverage percentage
-      # need to increase this to >80%
-      - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
-        uses: tj-actions/coverage-badge-go@v2
-        with:
-          filename: cover.out      
