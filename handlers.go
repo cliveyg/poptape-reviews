@@ -29,6 +29,7 @@ func (a *App) getStatus(w http.ResponseWriter, _ *http.Request) {
 func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	log.Println("In getAllMyReviews")
 
 	b, st, mess := bouncerSaysOk(r)
 	if !b {
@@ -41,8 +42,15 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	// successfully authenticated which means mess is the public_id
 	publicId := mess
 
-	count, _ := strconv.Atoi(r.FormValue("count"))
-	start, _ := strconv.Atoi(r.FormValue("start"))
+	count, err := strconv.Atoi(r.FormValue("count"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	var start int
+	start, err = strconv.Atoi(r.FormValue("start"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if count > 10 || count < 1 {
 		count = 10
@@ -50,6 +58,8 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	if start < 0 {
 		start = 0
 	}
+	log.Println("**********")
+	log.Printf("start is %d and count is %d", start, count)
 
 	reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
 	if err != nil {
