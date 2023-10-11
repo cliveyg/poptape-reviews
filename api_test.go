@@ -236,7 +236,10 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
 
 	reviews := make([]Review, 0)
-	json.NewDecoder(response.Body).Decode(&reviews)
+	err := json.NewDecoder(response.Body).Decode(&reviews)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if len(reviews) != 3 {
 		t.Errorf("no of reviews returned doesn't match should be 3 but is %d", len(reviews))
@@ -261,7 +264,7 @@ func TestMissingXAccessToken(t *testing.T) {
 
 	clearTable()
 	runSQL(insertDummyReviews)
-	
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
@@ -273,5 +276,57 @@ func TestMissingXAccessToken(t *testing.T) {
 
 	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
 		fmt.Println("[PASS].....TestMissingXAccessToken")
+	}
+}
+
+// get reviews by user - no auth needed
+func TestGetReviewsByUser(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	reviews := make([]Review, 0)
+	err := json.NewDecoder(response.Body).Decode(&reviews)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, r := range reviews {
+		if r.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05304" {
+			noError = false
+			t.Errorf("reviewed by doesn't match")
+		}
+	}
+
+	if len(reviews) != 3 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByUser")
+	}
+
+}
+
+// test bad uuid
+func TestBadUUID(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf0530g", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestBadUUID")
 	}
 }
