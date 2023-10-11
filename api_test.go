@@ -629,7 +629,7 @@ func TestCreateReviewOk(t *testing.T) {
 	noError = checkResponseCode(t, http.StatusOK, response.Code)
 
 	var rev Review
-	err := json.NewDecoder(response.Body).Decode(&rev)
+	err = json.NewDecoder(response.Body).Decode(&rev)
 	if err != nil {
 		noError = false
 		t.Errorf("Error decoding JSON: " + err.Error())
