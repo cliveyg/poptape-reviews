@@ -25,7 +25,8 @@ func ValidAuction(auctionId, publicId, x string) bool {
 	fullURL := GetURL("AUCTIONURL") + auctionId
 	log.Println("FULL URL is "+fullURL)
 	log.Println("publicId is "+publicId)
-	log.Printf("Is valid? %b", ValidThing(fullURL, x, "auction", publicId))
+	valid := ValidThing(fullURL, x, "auction", publicId)
+	log.Printf("Is valid? %t",valid)
 	return ValidThing(fullURL, x, "auction", publicId)
 }
 
