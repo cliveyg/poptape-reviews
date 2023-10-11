@@ -72,7 +72,11 @@ jobs:
           cat .env
       # finally run go test    
       - name: Run go test and generate test coverage file
-        run: go test -v ./... -coverprofile=./cover.out      
+        run: go test -v ./... -coverprofile=./cover.out
+      - name: Test data is in database 
+        run: psql -h postgres -d testdb -U testdb_user -c 'SELECT COUNT(*) FROM reviews'
+        env:
+          PGPASSWORD: testdb_password
       # and check test coverage percentage
       #- name: Check test coverage
       #  uses: vladopajic/go-test-coverage@v2
