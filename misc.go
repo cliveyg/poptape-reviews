@@ -69,6 +69,8 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 	client := &http.Client{Timeout: time.Second * 10}
 	resp, e := client.Do(req)
 
+	//NB Going to leave this commented code here for the moment
+	// removed so as to pass tests using httpmock
 	//req, err := http.NewRequest("GET", URL, nil)
 	//if err != nil {
 	//	log.Print(err)
@@ -93,7 +95,6 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 		log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
 		return false
 	} else {
-		//log.Println("WOOOOOOOO!")
 		defer resp.Body.Close()
 		//TODO: check if auction finished and user won
 		// when thingType is 'auction'
@@ -105,7 +106,6 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 			return true
 		}
 	}
-	log.Println("We is losst")
 	return false
 
 }
