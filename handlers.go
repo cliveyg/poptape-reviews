@@ -44,12 +44,16 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 
 	count, err := strconv.Atoi(r.FormValue("count"))
 	if err != nil {
-		log.Fatal("Error parsing count: ",err)
+		// if error parsing eg; when running unit tests then default to 10
+		count = 10
+		log.Println("Error parsing count: ",err)
 	}
 	var start int
 	start, err = strconv.Atoi(r.FormValue("start"))
 	if err != nil {
-		log.Fatal("Error parsing start: ",err)
+		// if error parsing eg; when running unit tests then default to 0
+		start = 0
+		log.Println("Error parsing start: ",err)
 	}
 
 	if count > 10 || count < 1 {
