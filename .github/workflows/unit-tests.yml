@@ -11,6 +11,10 @@ jobs:
   unit-tests:
     name: Run unit tests
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+      volumes:
+        - ${{ github.workspace }}:/app
     services:
       # label used to access the service container
       postgres:
@@ -30,16 +34,16 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    container:
-      image: ubuntu:latest
-      volumes:
-        - ${{ github.workspace }}:/app
     steps:
       # add install ca certs step to prevent tls error messages
       # when installing golang deps
       - name: Install ca certs dep
         run: |
-          apt-get update && apt-get install --yes --no-install-recommends ca-certificates
+          apt-get update && apt-get install --yes --no-install-recommends ca-certificates postgresql-client
+      - name: Connect and query database 
+        run: psql -h postgres -d testdb -U testdb_user -c '\l'
+        env:
+          PGPASSWORD: testdb_password
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Set up Go
@@ -51,28 +55,30 @@ jobs:
           rm -f go.mod go.sum
           go mod init github.com/cliveyg/poptape-reviews
           go mod tidy
-      # run go build and output binary to dev null as it's not used in ci
+      # run go build and output binary to dev null as it's not used for running unit tests
       - name: Run go build
         run: go build -o /dev/null ./...
-        env:
-          DB_HOST: postgres
-          DB_USERNAME: testdb_user
-          DB_PASSWORD: testdb_password
-          DB_NAME: testdb
       # have to create an .env file to be able to run unit tests as first
-      # unit test tests for existence of file
-      - name: 'Create env file for unit testing'
+      # unit test tests for existence of a .env file
+      - name: Create .env file for unit testing
         run: |
           touch .env
-          echo DB_HOST=localhost >> .env
-          echo DB_USERNAME=testdb_user >> .env
-          echo DB_PASSWORD=testdb_password >> .env
-          echo DB_NAME=testdb >> .env
+          echo TESTDB_HOST=postgres >> .env
+          echo TESTDB_USERNAME=testdb_user >> .env
+          echo TESTDB_PASSWORD=testdb_password >> .env
+          echo TESTDB_NAME=testdb >> .env
+          echo ENVIRONMENT=DEV >> .env
+          echo AUTHYURL=https://poptape.club/authy/checkaccess/10 >> .env
+          echo AUCTIONURL=https://poptape.club/auctionhouse/auction/ >> .env
           cat .env
       # finally run go test    
-      #- name: Run go test and generate test coverage file
-      #  run: go test -v ./... -coverprofile=./cover.out      
-      # and check test coverage
+      - name: Run go test and generate test coverage file
+        run: go test -v ./... -coverprofile=./cover.out
+      - name: Test data is in database 
+        run: psql -h postgres -d testdb -U testdb_user -c 'SELECT COUNT(*) FROM reviews'
+        env:
+          PGPASSWORD: testdb_password
+      # and check test coverage percentage
       #- name: Check test coverage
       #  uses: vladopajic/go-test-coverage@v2
       #  with:
