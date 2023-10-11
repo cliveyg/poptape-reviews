@@ -36,7 +36,6 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusUnauthorized, badmess
 		}
 
-		log.Print(fmt.Sprintf("***** X-Access-Token [%s]", x))
 		req.Header.Set("X-Access-Token", x)
 		req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -48,25 +47,12 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusServiceUnavailable, badmess
 		} else {
 			defer resp.Body.Close()
-			//bodyBytes, err := io.ReadAll(resp.Body)
-			//if err != nil {
-			//	log.Fatal(err)
-			//}
-			//log.Println("Response body is " + string(bodyBytes))
-			log.Printf("Response status code is %d",resp.StatusCode)
 			if resp.StatusCode == 200 {
 				var u user
-				//json.NewDecoder(resp.Body).Decode(&u)
 				if err := json.NewDecoder(resp.Body).Decode(&u); err != nil {
 					log.Printf("error deserializing JSON: %v", err)
 					return false, http.StatusBadRequest, `{"message": "Unable to decode response body"}`
 				}
-				//if err != nil {
-				//	log.Println("Unable to decode response body")
-				//	log.Println(err)
-				//	return false, http.StatusBadRequest, `{"message": "Unable to decode response body"}`
-				//}
-				log.Println("User deets are "+ u.PublicId)
 				return true, http.StatusOK, u.PublicId
 			}
 		}

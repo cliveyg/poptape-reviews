@@ -198,7 +198,7 @@ func TestEmptyTable(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
-		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	clearTable()
 
@@ -215,7 +215,6 @@ func TestEmptyTable(t *testing.T) {
 		fmt.Println("[PASS].....TestEmptyTable")
 	}
 
-	//runSQL(insertDummyReviews)
 }
 
 // get reviews for authed user
@@ -228,8 +227,6 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
-
-	log.Printf("*** No. of records in reviews table is %d", getRecCount())
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -259,3 +256,22 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 }
 
+// test missing access token
+func TestMissingXAccessToken(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+	
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
+		fmt.Println("[PASS].....TestMissingXAccessToken")
+	}
+}
