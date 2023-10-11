@@ -213,6 +213,9 @@ func TestEmptyTable(t *testing.T) {
 // get reviews for authed user
 func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
+	clearTable()
+	runSQL(insertDummyReviews)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
@@ -220,7 +223,6 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 	//runSQL(dropTable)
 	//runSQL(tableCreationQuery)
-	runSQL(insertDummyReviews)
 
 	//recCount := getRecCount()
 	//log.Printf("No. of records in reviews table is %d", recCount)
