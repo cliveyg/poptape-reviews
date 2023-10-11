@@ -71,6 +71,15 @@ func runSQL(sqltext string) {
 	}
 }
 
+func getRecCount() (count int) {
+	rows, err := a.DB.Query("SELECT COUNT(*) FROM reviews")
+	if err != nil {
+		log.Fatal(err)
+	}
+	rows.Scan(&count)
+	return count
+}
+
 const dropTable = `DROP TABLE IF EXISTS reviews`
 
 const tableCreationQuery = `CREATE TABLE IF NOT EXISTS reviews
@@ -142,7 +151,7 @@ type Review struct {
 	ReviewedBy string `json:"reviewed_by"`
 	AuctionId  string `json:"auction_id"`
 	ItemId     string `json:"item_id"`
-	Seller     string `json:"seller`
+	Seller     string `json:"seller"`
 	Overall    int    `json:"overall"`
 	PapCost    int    `json:"post_and_packaging"`
 	Comm       int    `json:"communication"`
