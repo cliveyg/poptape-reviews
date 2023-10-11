@@ -40,20 +40,25 @@ jobs:
       - name: Install ca certs dep
         run: |
           apt-get update && apt-get install --yes --no-install-recommends ca-certificates
+      
       - name: Check out the repo
         uses: actions/checkout@v4
+      
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21.x'
+      
       - name: Install Go dependencies
         run: |
           rm -f go.mod go.sum
           go mod init github.com/cliveyg/poptape-reviews
           go mod tidy
+      
       # run go build and output binary to dev null as it's not used for running unit tests
       - name: Run go build
         run: go build -o /dev/null ./...
+      
       # have to create an .env file to be able to run unit tests 
       - name: Create .env file for unit testing
         run: |
@@ -67,7 +72,9 @@ jobs:
           echo AUCTIONURL=https://poptape.club/auctionhouse/auction/ >> .env
           echo ITEMURL=https://poptape.club/items/ >> .env
           cat .env
+      
       # run unit tests
       - name: Run go test and generate test coverage file
         run: go test -v ./... -coverprofile=./cover.out
+      
       # and check test coverage percentage
