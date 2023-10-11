@@ -635,3 +635,36 @@ func TestCreateReviewOk(t *testing.T) {
 	log.Printf("Total call count is %d",httpmock.GetTotalCallCount())
 
 }
+
+// test review creation fails if duplicate attempted
+func TestCreateReviewDuplicateReviewFail(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
+	httpmock.RegisterResponder("GET", url,
+		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
+
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
+
+	req, _ = http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response = executeRequest(req)
+
+	noError = checkResponseCode(t, http.StatusInternalServerError, response.Code)
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewDuplicateReviewFail")
+	}
+}
