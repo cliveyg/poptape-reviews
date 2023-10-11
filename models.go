@@ -50,6 +50,7 @@ func (r *Review) getReview(db *sql.DB) error {
 		&r.ReviewedBy,
 		&r.AuctionId,
 		&r.ItemId,
+		&r.Seller,
 		&r.Overall,
 		&r.PapCost,
 		&r.Comm,
