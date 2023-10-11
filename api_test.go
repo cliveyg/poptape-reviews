@@ -3,6 +3,7 @@
 package main_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
 	"github.com/jarcoal/httpmock"
@@ -206,6 +207,52 @@ func TestEmptyTable(t *testing.T) {
 		fmt.Println("[PASS].....TestEmptyTable")
 	}
 
+	//runSQL(insertDummyReviews)
+}
+
+// get reviews for authed user
+func TestReturnOnlyAuthUserReviews(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	runSQL(dropTable)
+	runSQL(tableCreationQuery)
 	runSQL(insertDummyReviews)
+
+	recCount := getRecCount()
+	log.Printf("No. of records in reviews table is %d", recCount)
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	reviews := make([]Review, 0)
+	err := json.NewDecoder(response.Body).Decode(&reviews)
+	if err != nil {
+		t.Errorf("Error decoding json")
+	}
+
+	if len(reviews) != 3 {
+		t.Errorf("no of reviews returned doesn't match should be 3 but is %d", len(reviews))
+		noError = false
+	}
+
+	for _, r := range reviews {
+		if r.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05304" {
+			t.Errorf("reviewed by doesn't match")
+			noError = false
+		}
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestReturnOnlyAuthUserReviews")
+	}
+
 }
 
