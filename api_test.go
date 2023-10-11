@@ -614,6 +614,7 @@ func TestCreateReviewOk(t *testing.T) {
 	//url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
 	httpmock.RegisterResponder("GET", "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111",
 		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
+	defer httpmock.DeactivateAndReset()
 
 	//auction_id, review, overall, pap_cost, communication, as_described)
 	payload := []byte(createJson)
@@ -642,7 +643,7 @@ func TestCreateReviewOk(t *testing.T) {
 	response = executeRequest(req)
 
 	log.Printf("Total call count is %d",httpmock.GetTotalCallCount())
-	httpmock.DeactivateAndReset()
+
 
 	noError = checkResponseCode(t, http.StatusOK, response.Code)
 	var rev Review
