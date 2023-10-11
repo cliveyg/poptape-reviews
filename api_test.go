@@ -599,12 +599,12 @@ func TestCreateReviewOk(t *testing.T) {
 	oldRecCnt := getRecCount()
 
 	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 	//url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
 	httpmock.RegisterResponder("GET", "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111",
 		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
+	defer httpmock.DeactivateAndReset()
 
 	//auction_id, review, overall, pap_cost, communication, as_described)
 	payload := []byte(createJson)
