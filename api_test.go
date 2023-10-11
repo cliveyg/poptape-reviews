@@ -600,7 +600,7 @@ func TestCreateReviewOk(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	
+
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 

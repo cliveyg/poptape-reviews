@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -63,21 +62,33 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 		log.Print(err)
 		return false
 	}
+
 	req.Header.Set("X-Access-Token", x)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
-	skipVerify := false
-	if os.Getenv("ENVIRONMENT") == "DEV" {
-		//log.Println("skipVerify set to true")
-		skipVerify = true
-	}
-	// skip verify to avoid x509 cert check if in dev env
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
-	}
-
-	client := &http.Client{Timeout: time.Second * 10, Transport: tr}
+	client := &http.Client{Timeout: time.Second * 10}
 	resp, e := client.Do(req)
+
+	//req, err := http.NewRequest("GET", URL, nil)
+	//if err != nil {
+	//	log.Print(err)
+	//	return false
+	//}
+	//req.Header.Set("X-Access-Token", x)
+	//req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	//skipVerify := false
+	//if os.Getenv("ENVIRONMENT") == "DEV" {
+	//	//log.Println("skipVerify set to true")
+	//	skipVerify = true
+	//}
+	// skip verify to avoid x509 cert check if in dev env
+	//tr := &http.Transport{
+	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
+	//}
+
+	//client := &http.Client{Timeout: time.Second * 10, Transport: tr}
+	//resp, e := client.Do(req)
 	if e != nil {
 		log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
 		return false
