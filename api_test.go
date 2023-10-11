@@ -607,7 +607,6 @@ func TestCreateReviewOk(t *testing.T) {
 			[]*http.Response{
 				httpmock.NewStringResponse(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`),
 				httpmock.NewStringResponse(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`),
-				httpmock.NewStringResponse(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`),
 			},
 			t.Log),
 	)
