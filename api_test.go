@@ -547,3 +547,45 @@ func TestDeleteReviewOk(t *testing.T) {
 		fmt.Println("[PASS].....TestDeleteReviewOk")
 	}
 }
+
+// failed delete review - cannot delete someone else's review
+func TestDeleteFail(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6333", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotAcceptable, response.Code) {
+		fmt.Println("[PASS].....TestDeleteFail")
+	}
+}
+
+// failed delete review when unauthorised
+func TestDeleteNotAuthedFail(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+	
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(401, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
+		fmt.Println("[PASS].....TestDeleteNotAuthedFail")
+	}
+}
