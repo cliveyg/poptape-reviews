@@ -73,6 +73,7 @@ func runSQL(sqltext string) {
 }
 
 func getRecCount() (count int) {
+
 	rows, err := a.DB.Query("SELECT COUNT(*) FROM reviews")
 	if err != nil {
 		log.Fatal(err)
@@ -224,8 +225,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	//runSQL(dropTable)
 	//runSQL(tableCreationQuery)
 
-	//recCount := getRecCount()
-	//log.Printf("No. of records in reviews table is %d", recCount)
+	recCount := getRecCount()
+	log.Printf("No. of records in reviews table is %d", recCount)
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
