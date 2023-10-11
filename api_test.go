@@ -518,3 +518,32 @@ func TestGetReviewsByAnotherUser(t *testing.T) {
 		fmt.Println("[PASS].....TestGetReviewsByAnotherUser")
 	}
 }
+
+// get delete review for authed user
+func TestDeleteReviewOk(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusGone, response.Code)
+
+	req, _ = http.NewRequest("GET", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response = executeRequest(req)
+
+	noError = checkResponseCode(t, http.StatusNotFound, response.Code)
+	if noError {
+		fmt.Println("[PASS].....TestDeleteReviewOk")
+	}
+}
