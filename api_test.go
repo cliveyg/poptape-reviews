@@ -3,6 +3,7 @@
 package main_test
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
@@ -74,13 +75,26 @@ func runSQL(sqltext string) {
 
 func getRecCount() (count int) {
 
-	rows, err := a.DB.Query("SELECT COUNT(*) FROM reviews")
+	rows, err := a.DB.Query("SELECT COUNT(*) AS count FROM reviews")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = rows.Scan(&count)
-	if err != nil {
-		log.Fatal(err)
+	log.Println("*** Total count:",checkCount(rows))
+	for rows.Next() {
+		err:= rows.Scan(&count)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	return count
+}
+
+func checkCount(rows *sql.Rows) (count int) {
+	for rows.Next() {
+		err:= rows.Scan(&count)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return count
 }
