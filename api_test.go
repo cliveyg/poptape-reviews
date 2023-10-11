@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
-	clearTable()
+	//clearTable()
 
 	os.Exit(code)
 }
