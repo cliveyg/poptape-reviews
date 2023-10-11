@@ -222,8 +222,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	runSQL(tableCreationQuery)
 	runSQL(insertDummyReviews)
 
-	recCount := getRecCount()
-	log.Printf("No. of records in reviews table is %d", recCount)
+	//recCount := getRecCount()
+	//log.Printf("No. of records in reviews table is %d", recCount)
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
