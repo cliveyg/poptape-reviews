@@ -227,7 +227,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
-		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	log.Printf("*** No. of records in reviews table is %d", getRecCount())
 
