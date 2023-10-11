@@ -599,17 +599,17 @@ func TestCreateReviewOk(t *testing.T) {
 	oldRecCnt := getRecCount()
 
 	httpmock.Activate()
-	//httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
-	//	httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
-
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
-		httpmock.ResponderFromMultipleResponses(
-			[]*http.Response{
-				httpmock.NewStringResponse(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`),
-				httpmock.NewStringResponse(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`),
-			},
-			t.Log),
-	)
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	//httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	//	httpmock.ResponderFromMultipleResponses(
+	//		[]*http.Response{
+	//			httpmock.NewStringResponse(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`),
+	//			httpmock.NewStringResponse(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`),
+	//		},
+	//		t.Log),
+	//)
 
 	//url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
 	httpmock.RegisterResponder("GET", "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111",
@@ -640,6 +640,8 @@ func TestCreateReviewOk(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Set("X-Access-Token", "faketoken")
 	response = executeRequest(req)
+
+	log.Printf("Total call count is %d",httpmock.GetTotalCallCount())
 	httpmock.DeactivateAndReset()
 
 	noError = checkResponseCode(t, http.StatusOK, response.Code)

@@ -60,7 +60,6 @@ func CheckRequest(r *http.Request) (bool, int, string) {
 
 func ValidThing(URL, x, thingType, UUID string) bool {
 
-	log.Printf("URL in ValidThing is [%s]",URL)
 	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
 		log.Print(err)
@@ -71,7 +70,7 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 
 	skipVerify := false
 	if os.Getenv("ENVIRONMENT") == "DEV" {
-		log.Println("skipVerify set to true")
+		//log.Println("skipVerify set to true")
 		skipVerify = true
 	}
 	// skip verify to avoid x509 cert check if in dev env
@@ -85,14 +84,14 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 		log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
 		return false
 	} else {
-		log.Println("WOOOOOOOO!")
+		//log.Println("WOOOOOOOO!")
 		defer resp.Body.Close()
 		//TODO: check if auction finished and user won
 		// when thingType is 'auction'
 		if thingType == "auction" {
 			log.Printf("Input UUID is [%s]",UUID)
 		}
-		log.Printf("Response status code is [%d]",resp.StatusCode)
+		//log.Printf("Response status code is [%d]",resp.StatusCode)
 		if resp.StatusCode == 200 {
 			return true
 		}
