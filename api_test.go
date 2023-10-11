@@ -3,6 +3,7 @@
 package main_test
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -574,7 +575,7 @@ func TestDeleteNotAuthedFail(t *testing.T) {
 
 	clearTable()
 	runSQL(insertDummyReviews)
-	
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
@@ -587,5 +588,85 @@ func TestDeleteNotAuthedFail(t *testing.T) {
 
 	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
 		fmt.Println("[PASS].....TestDeleteNotAuthedFail")
+	}
+}
+
+// test review creation
+func TestCreateReviewOk(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
+	httpmock.RegisterResponder("GET", url,
+		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
+
+	//auction_id, review, overall, pap_cost, communication, as_described)
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
+	var crep CreateResp
+	err := json.NewDecoder(response.Body).Decode(&crep)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding JSON: " + err.Error())
+	}
+
+	req, _ = http.NewRequest("GET", "/reviews/"+crep.ReviewId, nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response = executeRequest(req)
+
+	noError = checkResponseCode(t, http.StatusOK, response.Code)
+
+	var rev Review
+	err := json.NewDecoder(response.Body).Decode(&rev)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding JSON: " + err.Error())
+	}
+	if rev.ReviewedBy != "f38ba39a-3682-4803-a498-659f0bf05304" {
+		noError = false
+		t.Errorf("reviewed by doesn't match")
+	}
+	if rev.AuctionId != "f38ba39a-3682-4803-a498-659f0b111111" {
+		noError = false
+		t.Errorf("auction id doesn't match")
+	}
+	if rev.ItemId != "f80689a6-9fba-4859-bdde-0a307c696ea8" {
+		noError = false
+		t.Errorf("item id doesn't match")
+	}
+	if rev.Review != "amazing product" {
+		noError = false
+		t.Errorf("review doesn't match")
+	}
+	if rev.Overall != 4 {
+		noError = false
+		t.Errorf("overall score doesn't match")
+	}
+	if rev.PapCost != 3 {
+		noError = false
+		t.Errorf("p&p score doesn't match")
+	}
+	if rev.Comm != 4 {
+		noError = false
+		t.Errorf("comm score doesn't match")
+	}
+	if rev.AsDesc != 4 {
+		noError = false
+		t.Errorf("as described score doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewOk")
 	}
 }
