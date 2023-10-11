@@ -20,7 +20,7 @@ func IsValidUUID(u string) bool {
 }
 
 func ValidAuction(auctionId, publicId, x string) bool {
-	return ValidThing(GetURL("AUCTIONURL") + auctionId, x, "auction", publicId)
+	return ValidThing(GetURL("AUCTIONURL")+auctionId, x, "auction", publicId)
 }
 
 func ValidItem(itemId, x string) bool {
@@ -95,7 +95,7 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 		//TODO: check if auction finished and user won
 		// when thingType is 'auction'
 		if thingType == "auction" {
-			log.Printf("Input UUID is [%s]",UUID)
+			log.Printf("Input UUID is [%s]", UUID)
 		}
 		//log.Printf("Response status code is [%d]",resp.StatusCode)
 		if resp.StatusCode == 200 {
