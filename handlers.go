@@ -44,12 +44,12 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 
 	count, err := strconv.Atoi(r.FormValue("count"))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error parsing count: ",err)
 	}
 	var start int
 	start, err = strconv.Atoi(r.FormValue("start"))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error parsing start: ",err)
 	}
 
 	if count > 10 || count < 1 {
