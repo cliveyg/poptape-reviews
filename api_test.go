@@ -111,18 +111,6 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS reviews
     CONSTRAINT reviews_pkey PRIMARY KEY (review_id)
 )`
 
-ReviewId   string `json:"review_id"`
-Review     string `json:"review"`
-ReviewedBy string `json:"reviewed_by"`
-AuctionId  string `json:"auction_id"`
-ItemId     string `json:"item_id"`
-Seller     string `json:"seller"`
-Overall    int    `json:"overall"`
-PapCost    int    `json:"post_and_packaging"`
-Comm       int    `json:"communication"`
-AsDesc     int    `json:"as_described"`
-Created    string `json:"created"`
-
 const insertDummyReviews = `INSERT INTO reviews 
 (review_id, reviewed_by, auction_id, item_id, 
 seller, review, overall, pap_cost, 
