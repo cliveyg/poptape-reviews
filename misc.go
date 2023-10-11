@@ -20,11 +20,7 @@ func IsValidUUID(u string) bool {
 }
 
 func ValidAuction(auctionId, publicId, x string) bool {
-
-	fullURL := GetURL("AUCTIONURL") + auctionId
-	log.Println("FULL URL is "+fullURL)
-	log.Println("publicId is "+publicId)
-	return ValidThing(fullURL, x, "auction", publicId)
+	return ValidThing(GetURL("AUCTIONURL") + auctionId, x, "auction", publicId)
 }
 
 func ValidItem(itemId, x string) bool {

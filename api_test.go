@@ -668,3 +668,36 @@ func TestCreateReviewDuplicateReviewFail(t *testing.T) {
 		fmt.Println("[PASS].....TestCreateReviewDuplicateReviewFail")
 	}
 }
+
+// test review creation fails if 'overall' field is not numeric
+func TestCreateReviewFailOnOverall(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
+	httpmock.RegisterResponder("GET", url,
+		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
+
+	var badOverall = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
+"item_id":"f80689a6-9fba-4859-bdde-0a307c696ea8",
+"review": "amazing product",
+"overall": "a",
+"post_and_packaging": 3,
+"communication": 4,
+"as_described": 4}`
+
+	payload := []byte(badOverall)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestCreateReviewFailOnOverall")
+	}
+}
