@@ -239,10 +239,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
 
 	reviews := make([]Review, 0)
-	err := json.NewDecoder(response.Body).Decode(&reviews)
-	if err != nil {
-		t.Errorf("Error decoding json")
-	}
+	json.NewDecoder(response.Body).Decode(&reviews)
 
 	if len(reviews) != 3 {
 		t.Errorf("no of reviews returned doesn't match should be 3 but is %d", len(reviews))

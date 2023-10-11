@@ -63,7 +63,7 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 				//	log.Println(err)
 				//	return false, http.StatusBadRequest, `{"message": "Unable to decode response body"}`
 				//}
-				//log.Println("User deets are "+ u.PublicId)
+				log.Println("User deets are "+ u.PublicId)
 				return true, http.StatusOK, u.PublicId
 			}
 		}
