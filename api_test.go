@@ -451,13 +451,13 @@ func TestGetReviewByItem(t *testing.T) {
 	}
 }
 
-// get reviews of the user  - no auth needed
+// get reviews of the users selling  - no auth needed
 func TestGetReviewsOfUser(t *testing.T) {
 
 	clearTable()
 	runSQL(insertDummyReviews)
 
-	req, _ := http.NewRequest("GET", "/reviews/of/user/47ef18dd-6869-4b78-a445-c9a6a8620c05", nil)
+	req, _ := http.NewRequest("GET", "/reviews/of/user/46d7d11c-fa06-4e54-8208-95433b98cfc9", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
@@ -470,7 +470,7 @@ func TestGetReviewsOfUser(t *testing.T) {
 		t.Errorf("Error decoding JSON: " + err.Error())
 	}
 	for _, r := range reviews {
-		if r.Seller != "47ef18dd-6869-4b78-a445-c9a6a8620c05" {
+		if r.Seller != "46d7d11c-fa06-4e54-8208-95433b98cfc9" {
 			noError = false
 			t.Errorf("reviewed by doesn't match")
 		}
@@ -478,14 +478,14 @@ func TestGetReviewsOfUser(t *testing.T) {
 
 	if len(reviews) != 3 {
 		noError = false
-		t.Errorf("no of reviews returned doesn't match")
+		t.Errorf("no of reviews returned doesn't match: expected 3 and got %d", len(reviews))
 	}
 	if noError {
 		fmt.Println("[PASS].....TestGetReviewsOfUser")
 	}
 }
 
-// get reviews by the user  - no auth needed
+// get reviews written by the user  - no auth needed
 func TestGetReviewsByAnotherUser(t *testing.T) {
 
 	clearTable()
