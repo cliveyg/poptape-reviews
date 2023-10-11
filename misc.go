@@ -83,16 +83,19 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 		log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
 		return false
 	} else {
+		log.Println("WOOOOOOOO!")
 		defer resp.Body.Close()
 		//TODO: check if auction finished and user won
 		// when thingType is 'auction'
-		if thingType == "auction:" {
+		if thingType == "auction" {
 			UUID = ""
 		}
+		log.Printf("Response status code is [%d]",resp.StatusCode)
 		if resp.StatusCode == 200 {
 			return true
 		}
 	}
+	log.Println("We is losst")
 	return false
 
 }
