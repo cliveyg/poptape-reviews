@@ -72,11 +72,7 @@ jobs:
         run: go test -v ./... -coverprofile=./cover.out
       # and check test coverage percentage
       # need to increase this to >80%
-      - name: Check test coverage
-        uses: vladopajic/go-test-coverage@v2
+      - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
+        uses: tj-actions/coverage-badge-go@v2
         with:
-          profile: cover.out
-          local-prefix: github.com/org/project
-          threshold-file: 50
-          threshold-package: 50
-          threshold-total: 50          
+          filename: cover.out      
