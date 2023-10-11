@@ -76,7 +76,10 @@ func getRecCount() (count int) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	rows.Scan(&count)
+	err = rows.Scan(&count)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return count
 }
 
@@ -202,5 +205,7 @@ func TestEmptyTable(t *testing.T) {
 	if checkResponseCode(t, http.StatusNotFound, response.Code) {
 		fmt.Println("[PASS].....TestEmptyTable")
 	}
+
+	runSQL(insertDummyReviews)
 }
 
