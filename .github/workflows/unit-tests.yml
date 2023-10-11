@@ -89,6 +89,8 @@ jobs:
             echo "-----------------------------------------------------------"
             echo "1"
             echo "2"
+            echo $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') 
+            echo "-----------------------------------------------------------"
 
             if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') )); then
                 echo "OK"
