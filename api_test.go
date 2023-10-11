@@ -73,20 +73,13 @@ func runSQL(sqltext string) {
 	}
 }
 
-func getRecCount() (count int) {
+func getRecCount() int {
 
 	rows, err := a.DB.Query("SELECT COUNT(*) AS count FROM reviews")
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("*** Total count:",checkCount(rows))
-	for rows.Next() {
-		err:= rows.Scan(&count)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	return count
+	return checkCount(rows)
 }
 
 func checkCount(rows *sql.Rows) (count int) {
@@ -236,11 +229,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
 		httpmock.NewStringResponder(200, `{"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
-	//runSQL(dropTable)
-	//runSQL(tableCreationQuery)
-
-	recCount := getRecCount()
-	log.Printf("No. of records in reviews table is %d", recCount)
+	log.Printf("*** No. of records in reviews table is %d", getRecCount())
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
