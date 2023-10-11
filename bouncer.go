@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	//"io/ioutil"
@@ -49,11 +48,11 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 			return false, http.StatusServiceUnavailable, badmess
 		} else {
 			defer resp.Body.Close()
-			bodyBytes, err := io.ReadAll(resp.Body)
-			if err != nil {
-				log.Fatal(err)
-			}
-			log.Println("Response body is " + string(bodyBytes))
+			//bodyBytes, err := io.ReadAll(resp.Body)
+			//if err != nil {
+			//	log.Fatal(err)
+			//}
+			//log.Println("Response body is " + string(bodyBytes))
 			log.Printf("Response status code is %d",resp.StatusCode)
 			if resp.StatusCode == 200 {
 				var u user
