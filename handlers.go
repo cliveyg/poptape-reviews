@@ -29,7 +29,6 @@ func (a *App) getStatus(w http.ResponseWriter, _ *http.Request) {
 func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	log.Println("In getAllMyReviews")
 
 	b, st, mess := bouncerSaysOk(r)
 	if !b {
@@ -62,9 +61,6 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 	if start < 0 {
 		start = 0
 	}
-	log.Println("**********")
-	log.Printf("start is %d and count is %d", start, count)
-	log.Println("publicId is "+ publicId)
 
 	reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
 	if err != nil {
