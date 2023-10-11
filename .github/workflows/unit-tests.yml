@@ -40,8 +40,8 @@ jobs:
       - name: Install ca certs dep
         run: |
           apt-get update && apt-get install --yes --no-install-recommends ca-certificates postgresql-client
-      - name: Query database 
-        run: psql -h postgres -d testdb -U testdb_user -c 'SELECT 1;'
+      - name: Connect and query database 
+        run: psql -h postgres -d testdb -U testdb_user -c '\l'
         env:
           PGPASSWORD: testdb_password
       - name: Check out the repo
