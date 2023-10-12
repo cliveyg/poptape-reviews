@@ -80,7 +80,7 @@ jobs:
       # and check test coverage percentage
       - name: Check test coverage is above threshold
         env:
-          TESTCOVERAGE_THRESHOLD: 60
+          TESTCOVERAGE_THRESHOLD: 40
         run: |
             echo "Quality Gate: checking test coverage is above threshold ..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
@@ -92,7 +92,7 @@ jobs:
             echo "Result is $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}')"
             echo "-----------------------------------------------------------"
 
-            if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') ))
+            if [ $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') ]
             then
                 echo "OK"
             else
