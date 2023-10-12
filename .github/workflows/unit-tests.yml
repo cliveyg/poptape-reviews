@@ -82,16 +82,11 @@ jobs:
         env:
           TESTCOVERAGE_THRESHOLD: 40
         run: |
-            echo "Quality Gate: checking test coverage is above threshold ..."
+            echo "Checking test coverage is above threshold..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
             totalCoverage=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
             echo "Current test coverage : $totalCoverage %"
             echo "-----------------------------------------------------------"
-            echo "1"
-            echo "2"
-            echo "Result is $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}')"
-            echo "-----------------------------------------------------------"
-
             if [ $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') ]
             then
                 echo "OK"
