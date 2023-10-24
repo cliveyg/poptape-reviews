@@ -20,7 +20,7 @@ jobs:
       postgres:
         # dockerhub image
         image: postgres
-        # provide the login and db details for postgres
+        # provide the login and db deets for postgres
         env:
           POSTGRES_DB: poptape_reviews_test
           POSTGRES_PASSWORD: ${{ secrets.TESTDB_PASSWORD }}
