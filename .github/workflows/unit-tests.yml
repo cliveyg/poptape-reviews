@@ -60,18 +60,9 @@ jobs:
         run: go build -o /dev/null ./...
       
       # have to create an .env file to be able to run unit tests 
-      - name: Create .env file for unit testing
+      - name: Create .env file from github secrets
         run: |
-          touch .env
-          echo TESTDB_HOST=postgres >> .env
-          echo TESTDB_USERNAME=testdb_user >> .env
-          echo TESTDB_PASSWORD=${{ secrets.TESTDB_PASSWORD }} >> .env
-          echo TESTDB_NAME=testdb >> .env
-          echo ENVIRONMENT=DEV >> .env
-          echo AUTHYURL=https://poptape.club/authy/checkaccess/10 >> .env
-          echo AUCTIONURL=https://poptape.club/auctionhouse/auction/ >> .env
-          echo ITEMURL=https://poptape.club/items/ >> .env
-          cat .env
+          echo "${{ secrets.ENV_FILE }}" > .env
       
       # run unit tests
       - name: Run go test and generate test coverage file
