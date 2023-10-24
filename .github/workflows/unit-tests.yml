@@ -65,7 +65,7 @@ jobs:
           touch .env
           echo TESTDB_HOST=postgres >> .env
           echo TESTDB_USERNAME=testdb_user >> .env
-          echo TESTDB_PASSWORD=testdb_password >> .env
+          echo TESTDB_PASSWORD=${{ secrets.TESTDB_PASSWORD }} >> .env
           echo TESTDB_NAME=testdb >> .env
           echo ENVIRONMENT=DEV >> .env
           echo AUTHYURL=https://poptape.club/authy/checkaccess/10 >> .env
