@@ -65,7 +65,7 @@ Expected return codes: [200, 404]
 * ~~Return reviews of user~~
 * Need to add check for auction winner
 * Need to check item is valid
-* Fix some tests - some are failing even though the microservice works
+* ~~Fix some tests - some are failing even though the microservice works~~
 * Write more tests
 * Validate input
 * ~~Dockerize~~
