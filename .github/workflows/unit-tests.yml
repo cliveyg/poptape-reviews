@@ -78,7 +78,7 @@ jobs:
             totalCoverage=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
             echo "Current test coverage : $totalCoverage %"
             echo "-----------------------------------------------------------"
-            if [[ "$totalCoverage" -gt "$TESTCOVERAGE_THRESHOLD" ]]; 
+            if (( $(echo "$totalCoverage > $TESTCOVERAGE_THRESHOLD" | bc -l) ));
             then
                 echo "OK"
             else
