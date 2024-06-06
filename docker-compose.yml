@@ -19,6 +19,10 @@ services:
     restart: always
     ports:
       - "1245:5432"
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - poptape_reviews_data:/var/lib/postgresql/data
     networks:
@@ -28,4 +32,3 @@ networks:
     external: true
 volumes:
   poptape_reviews_data:
-  
