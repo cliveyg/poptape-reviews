@@ -767,3 +767,34 @@ func TestCreateReviewFailOnPostAndPackaging(t *testing.T) {
 	}
 }
 
+// get reviews written by the user  - no auth needed
+func TestGetMetadataOfUserPublicIDFail(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/user/blahblah", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestGetMetadataOfUserPublicIDFail")
+	}
+}
+
+// get reviews written of the user  - no auth needed
+func TestGetMetadataOfUserOK(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	// TODO: Add tests for totals returned
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataOfUserOK")
+	}
+}
