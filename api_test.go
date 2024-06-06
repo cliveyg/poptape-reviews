@@ -700,3 +700,101 @@ func TestCreateReviewFailOnOverall(t *testing.T) {
 		fmt.Println("[PASS].....TestCreateReviewFailOnOverall")
 	}
 }
+
+// test review creation fails if 'overall' field is not an integer
+func TestCreateReviewFailOnOverallFloat(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
+	httpmock.RegisterResponder("GET", url,
+		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
+
+	var badOverall = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
+"item_id":"f80689a6-9fba-4859-bdde-0a307c696ea8",
+"review": "amazing product",
+"overall": 3.4,
+"post_and_packaging": 3,
+"communication": 4,
+"as_described": 4}`
+
+	payload := []byte(badOverall)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestCreateReviewFailOnOverallFloat")
+	}
+}
+
+// test review creation fails if 'post and packaging' field is not integer
+func TestCreateReviewFailOnPostAndPackaging(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
+	httpmock.RegisterResponder("GET", url,
+		httpmock.NewStringResponder(200, `{"message": "whatevs"}`))
+
+	var badOverall = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
+"item_id":"f80689a6-9fba-4859-bdde-0a307c696ea8",
+"review": "amazing product",
+"overall": 4,
+"post_and_packaging": "blah",
+"communication": 4,
+"as_described": 4}`
+
+	payload := []byte(badOverall)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestCreateReviewFailOnPostAndPackaging")
+	}
+}
+
+// get reviews written by the user  - no auth needed
+func TestGetMetadataOfUserPublicIDFail(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/user/blahblah", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestGetMetadataOfUserPublicIDFail")
+	}
+}
+
+// get reviews written of the user  - no auth needed
+func TestGetMetadataOfUserOK(t *testing.T) {
+
+	clearTable()
+	runSQL(insertDummyReviews)
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	// TODO: Add tests for totals returned
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataOfUserOK")
+	}
+}

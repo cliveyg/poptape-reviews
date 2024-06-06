@@ -585,8 +585,6 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	//io.WriteString(w, `{ "reviews_by": `+totalReviewedBy+`,
-	//                 }`)
 	multiline := "{ \"total_reviews_of\": " + strconv.Itoa(totalReviewsOf) + " ,\n" +
 		" \"total_reviews_by\": " + strconv.Itoa(totalReviewedBy) + " ,\n" +
 		" \"calculated_score\": " + strconv.Itoa(calculatedScore) + " }"
