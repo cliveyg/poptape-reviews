@@ -18,4 +18,5 @@
 !api_test.go
 !go.mod
 !go.sum
-!.github/workflows/*
+!.github/workflows/unit-tests.yml
+!.github/workflows/post-merge-deployment.yml
