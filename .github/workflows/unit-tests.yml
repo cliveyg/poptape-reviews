@@ -65,10 +65,15 @@ jobs:
           echo "${{ secrets.ENV_FILE }}" > .env
       
       # run unit tests
+      # go test -v ./... -coverprofile=./test_cover.out
       - name: Run go test and generate test coverage file
-        run: go test -v ./... -coverprofile=./cover.out
+        run: |
+            go test -v ./... -cover -coverprofile=./cover.out | tee test.out
+            echo "Present working dir: $(pwd)"
+            echo "Dir contents:\n$(ls -altr)"
       
       # and check test coverage percentage
+      #             go tool cover -func=test_cover.out | tee -a test_cover.out
       - name: Check test coverage is above threshold
         env:
           TESTCOVERAGE_THRESHOLD: 55
@@ -76,6 +81,9 @@ jobs:
             echo "Checking test coverage is above threshold..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
             totalCoverage=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            echo "YARP"
+            echo "NARP"
+            echo "MEEP"
             echo "Current test coverage : $totalCoverage %"
             echo "-----------------------------------------------------------"
             if awk "BEGIN {exit !($totalCoverage > $TESTCOVERAGE_THRESHOLD)}";
@@ -86,3 +94,8 @@ jobs:
                 echo "Failed"
                 exit 1
             fi
+      - name: Create coverage badges
+        uses: gaelgirodon/ci-badges-action@v1
+        with:
+          gist-id: c0dcede40c842bca92c6f8a5e4583c3c
+          token: ${{ secrets.GIST_TOKEN }}
