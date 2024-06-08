@@ -68,22 +68,21 @@ jobs:
       # go test -v ./... -coverprofile=./test_cover.out
       - name: Run go test and generate test coverage file
         run: |
-            go test -v ./... -cover | tee test_cover.out
+            go test -v ./... -cover -coverprofile=./cover.out | tee test.out
             echo "Present working dir: $(pwd)"
             echo "Dir contents:\n$(ls -altr)"
-            echo "\n[=== test_cover.out ===]\n$(cat test_cover.out)\n[======================]\n"
       
       # and check test coverage percentage
+      #             go tool cover -func=test_cover.out | tee -a test_cover.out
       - name: Check test coverage is above threshold
         env:
           TESTCOVERAGE_THRESHOLD: 55
         run: |
             echo "Checking test coverage is above threshold..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
-            totalCoverage=`go tool cover -func=test_cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            totalCoverage=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
             echo "YARP"
             echo "NARP"
-            go tool cover -func=test_cover.out | tee -a test_cover.out
             echo "MEEP"
             echo "Current test coverage : $totalCoverage %"
             echo "-----------------------------------------------------------"
