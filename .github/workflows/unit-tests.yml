@@ -65,9 +65,10 @@ jobs:
           echo "${{ secrets.ENV_FILE }}" > .env
       
       # run unit tests
+      # go test -v ./... -coverprofile=./test_cover.out
       - name: Run go test and generate test coverage file
         run: |
-            go test -v ./... -coverprofile=./test_cover.out
+            go test -v ./... -cover | tee test_cover.out
             echo "Present working dir: $(pwd)"
             echo "Dir contents:\n$(ls -altr)"
             echo "\n[=== test_cover.out ===]\n$(cat test_cover.out)\n[======================]\n"
