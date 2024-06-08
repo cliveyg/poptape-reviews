@@ -80,8 +80,11 @@ jobs:
             echo "Checking test coverage is above threshold..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
             totalCoverage=`go tool cover -func=test_cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            echo "YARP"
             totsCov=`go tool cover -func=test_cover.out`
+            echo "NARP"
             $totsCov >> test_cover.out
+            echo "MEEP"
             echo "Current test coverage : $totalCoverage %"
             echo "-----------------------------------------------------------"
             if awk "BEGIN {exit !($totalCoverage > $TESTCOVERAGE_THRESHOLD)}";
