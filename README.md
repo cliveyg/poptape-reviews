@@ -1,4 +1,7 @@
 # poptape-reviews
+![All unit tests pass](https://github.com/cliveyg/poptape-authy/actions/workflows/unit-test.yml/badge.svg) ![Successfully deployed](https://github.com/cliveyg/poptape-authy/actions/workflows/post-merge-deployment.yml/badge.svg)
+
+
 Reviews microservice written in Go
 
 This microservice validates and stores review data in a Postgres database.
