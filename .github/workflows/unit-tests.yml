@@ -66,7 +66,7 @@ jobs:
       
       # run unit tests
       - name: Run go test and generate test coverage file
-        run: go test -v ./... -coverprofile=./cover.out
+        run: go test -v ./... -coverprofile=./test_cover.out
       
       # and check test coverage percentage
       - name: Check test coverage is above threshold
@@ -75,7 +75,7 @@ jobs:
         run: |
             echo "Checking test coverage is above threshold..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
-            totalCoverage=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            totalCoverage=`go tool cover -func=test_cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
             echo "Current test coverage : $totalCoverage %"
             echo "-----------------------------------------------------------"
             if awk "BEGIN {exit !($totalCoverage > $TESTCOVERAGE_THRESHOLD)}";
@@ -86,3 +86,8 @@ jobs:
                 echo "Failed"
                 exit 1
             fi
+      - name: Create coverage badges
+        uses: gaelgirodon/ci-badges-action@v1
+        with:
+          gist-id: c0dcede40c842bca92c6f8a5e4583c3c
+          token: ${{ secrets.GIST_TOKEN }}
