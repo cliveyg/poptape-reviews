@@ -66,7 +66,10 @@ jobs:
       
       # run unit tests
       - name: Run go test and generate test coverage file
-        run: go test -v ./... -coverprofile=./test_cover.out
+        run: |
+            go test -v ./... -coverprofile=./test_cover.out
+            echo "Present working dir: $(pwd)"
+            echo "Dir contents:\n$(ls -altr)"
       
       # and check test coverage percentage
       - name: Check test coverage is above threshold
