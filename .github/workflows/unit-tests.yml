@@ -70,6 +70,7 @@ jobs:
             go test -v ./... -coverprofile=./test_cover.out
             echo "Present working dir: $(pwd)"
             echo "Dir contents:\n$(ls -altr)"
+            echo "\n[=== test_cover.out ===]\n$(cat test_cover.out)\n[======================]\n"
       
       # and check test coverage percentage
       - name: Check test coverage is above threshold
@@ -79,6 +80,8 @@ jobs:
             echo "Checking test coverage is above threshold..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
             totalCoverage=`go tool cover -func=test_cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            totsCov=`go tool cover -func=test_cover.out`
+            $totsCov >> test_cover.out
             echo "Current test coverage : $totalCoverage %"
             echo "-----------------------------------------------------------"
             if awk "BEGIN {exit !($totalCoverage > $TESTCOVERAGE_THRESHOLD)}";
