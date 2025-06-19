@@ -67,6 +67,7 @@ func ValidThing(URL, x, thingType, UUID string) bool {
 
 	//NB Going to leave this commented code here for the moment
 	// removed so as to pass tests using httpmock
+	//
 	//req, err := http.NewRequest("GET", URL, nil)
 	//if err != nil {
 	//	log.Print(err)

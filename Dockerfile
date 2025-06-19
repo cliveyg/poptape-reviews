@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine as build
+FROM golang:1.21-alpine AS build
 
 RUN apk --no-cache add git
 
@@ -13,7 +13,7 @@ RUN go mod tidy
 
 RUN go mod download
 
-# need these flags or alpine image won't run due to dynamically linked libs in binary
+# need these flags or alpine image won't run due to dynamically linked libs in binary
 RUN CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -a -ldflags '-w' -o reviews
 
 FROM alpine:latest
