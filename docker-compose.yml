@@ -32,3 +32,4 @@ networks:
     external: true
 volumes:
   poptape_reviews_data:
+    name: poptape_reviews_data
