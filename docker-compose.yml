@@ -5,10 +5,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - "GOOS=${GOOS}"
-      - "GOARCH={GOARCH}"
+      - "GOARCH=${GOARCH}"
+      - "PORT=${PORT}"
     image: poptape/reviews/api:v0.1
     ports:
-      - "1244:8020"
+      - "1244:${PORT}"
     restart: always
     depends_on:
       - db

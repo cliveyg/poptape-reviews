@@ -24,7 +24,7 @@ COPY --from=build /app/.env /reviews
 WORKDIR /reviews
 
 # Make port 8020 available to the world outside this container
-EXPOSE 8020
+EXPOSE $PORT
 
 # Run reviews binary when the container launches
 CMD ["./reviews"]
