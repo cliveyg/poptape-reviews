@@ -74,3 +74,6 @@ Expected return codes: [200, 404]
 * Validate input
 * ~~Dockerize~~
 * Documentation
+* Refactor to use zerolog
+* Refactor to use gin
+* Refactor to use gorm

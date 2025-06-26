@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -17,7 +18,7 @@ import (
 func (a *App) getStatus(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	mess := `{"message": "System running..."}`
+	mess := `{"message": "System running...", "version": "`+os.Getenv("VERSION")+`"}`
 	if _, err := io.WriteString(w, mess); err != nil {
 		log.Fatal(err)
 	}
