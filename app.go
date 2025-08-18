@@ -2,28 +2,39 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"log"
-	"net/http"
+	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
 
 type App struct {
-	Router *mux.Router
-	DB     *sql.DB
+	oRouter *mux.Router
+	oDB     *sql.DB
+	Router  *gin.Engine
+	DB      *gorm.DB
+	Log     *zerolog.Logger
 }
 
+func (a *App) InitialiseApp() {
+	a.Router = gin.Default()
+	//a.initialiseMiddleWare()
+	a.initialiseRoutes()
+	a.InitialiseDatabase()
+	//a.PopulateDatabase()
+}
+/*
 func (a *App) Initialize(host, user, password, dbname string) {
 
-	a.Router = mux.NewRouter()
+	a.oRouter = mux.NewRouter()
 	a.initializeRoutes()
 
 	connectionString :=
 		fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", host, user, password, dbname)
 
 	var err error
-	a.DB, err = sql.Open("postgres", connectionString)
+	a.oDB, err = sql.Open("postgres", connectionString)
 	if err != nil {
 		log.Fatal(err)
 	} else {
@@ -31,8 +42,9 @@ func (a *App) Initialize(host, user, password, dbname string) {
 	}
 
 }
+ */
 
-func (a *App) Run(addr string) {
-	log.Print(fmt.Sprintf("Server running on port [%s]", addr))
-	log.Fatal(http.ListenAndServe(addr, a.Router))
+func (a *App) Run(port string) {
+	a.Log.Info().Msgf("Server running on port [%s]", port)
+	a.Log.Fatal().Err(a.Router.Run(port))
 }

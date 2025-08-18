@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	a.Router.ServeHTTP(rr, req)
+	a.oRouter.ServeHTTP(rr, req)
 
 	return rr
 }
@@ -63,20 +63,20 @@ func checkResponseCode(t *testing.T, expected, actual int) bool {
 }
 
 func clearTable() {
-	if _, err := a.DB.Exec("DELETE FROM reviews"); err != nil {
+	if _, err := a.oDB.Exec("DELETE FROM reviews"); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func runSQL(sqltext string) {
-	if _, err := a.DB.Exec(sqltext); err != nil {
+	if _, err := a.oDB.Exec(sqltext); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func getRecCount() int {
 
-	rows, err := a.DB.Query("SELECT COUNT(*) AS count FROM reviews")
+	rows, err := a.oDB.Query("SELECT COUNT(*) AS count FROM reviews")
 	if err != nil {
 		log.Fatal(err)
 	}
