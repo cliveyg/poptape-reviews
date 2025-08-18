@@ -2,11 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"github.com/gin-gonic/gin"
 	"net/http"
-	//"io/ioutil"
-	"github.com/joho/godotenv"
 	"os"
 	"time"
 )
@@ -15,25 +12,26 @@ type user struct {
 	PublicId string `json:"public_id"`
 }
 
-func bouncerSaysOk(r *http.Request) (bool, int, string) {
+func (a *App) bouncerSaysOk(c *gin.Context) (bool, int, string) {
 
-	contype := r.Header.Get("Content-type")
-	badmess := `{"message": "Ooh you are naughty"}`
+	ct := c.GetHeader("Content-type")
+	bm := "Ooh you are naughty"
 
-	if !(contype == "application/json" ||
-		contype == "application/json; charset=UTF-8") {
-		badmess = `{"message": "Request must be json"}`
-		return false, http.StatusBadRequest, badmess
+	if !(ct == "application/json" ||
+		ct == "application/json; charset=UTF-8") {
+		bm = "Request must be json"
+		return false, http.StatusBadRequest, bm
 	}
 
-	x := r.Header.Get("X-Access-Token")
+	x := c.GetHeader("X-Access-Token")
 
 	if x != "" {
+
 		// call authy microservice
-		req, err := http.NewRequest("GET", getAuthyURL(), nil)
+		req, err := http.NewRequest("GET", os.Getenv("AUTHYURL"), nil)
 		if err != nil {
-			log.Print(err)
-			return false, http.StatusUnauthorized, badmess
+			a.Log.Info().Msgf("Error is [%s]", err.Error())
+			return false, http.StatusUnauthorized, bm
 		}
 
 		req.Header.Set("X-Access-Token", x)
@@ -42,30 +40,22 @@ func bouncerSaysOk(r *http.Request) (bool, int, string) {
 		client := &http.Client{Timeout: time.Second * 10}
 		resp, e := client.Do(req)
 		if e != nil {
-			log.Print(fmt.Sprintf("The HTTP request failed with error %s", e))
-			badmess = `{"message": "I'm sorry Dave"}`
-			return false, http.StatusServiceUnavailable, badmess
+			a.Log.Info().Msgf("HTTP req failed with [%s]", err.Error())
+			bm = "I'm sorry Dave"
+			return false, http.StatusServiceUnavailable, bm
 		} else {
 			defer resp.Body.Close()
 			if resp.StatusCode == 200 {
 				var u user
 				if err := json.NewDecoder(resp.Body).Decode(&u); err != nil {
-					log.Printf("error deserializing JSON: %v", err)
-					return false, http.StatusBadRequest, `{"message": "Unable to decode response body"}`
+					a.Log.Info().Msgf("Error deserializing JSON [%s]", err.Error())
+					return false, http.StatusBadRequest, "Unable to decode response body"
 				}
 				return true, http.StatusOK, u.PublicId
 			}
 		}
 	}
-	return false, http.StatusUnauthorized, badmess
-}
+	a.Log.Info().Msg("No x-access-token found")
 
-func getAuthyURL() string {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	return os.Getenv("AUTHYURL")
-
+	return false, http.StatusUnauthorized, bm
 }

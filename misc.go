@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
+	"io"
 	"log"
 	"net/http"
-	"os"
+	"sync"
 	"time"
 )
 
@@ -19,36 +21,69 @@ func IsValidUUID(u string) bool {
 	return err == nil
 }
 
-func ValidAuction(auctionId, publicId, x string) bool {
-	return ValidThing(GetURL("AUCTIONURL")+auctionId, x, "auction", publicId)
-}
+func checkRequest(c *gin.Context) (bool, int, string) {
 
-func ValidItem(itemId, x string) bool {
+	ct := c.GetHeader("Content-type")
 
-	fullURL := GetURL("ITEMURL") + itemId
-	return ValidThing(fullURL, x, "item", "")
-}
-
-func GetURL(t string) string {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	return os.Getenv(t)
-
-}
-
-func CheckRequest(r *http.Request) (bool, int, string) {
-
-	contype := r.Header.Get("Content-type")
-
-	if !(contype == "application/json" ||
-		contype == "application/json; charset=UTF-8") {
-		badmess := `{"message": "Request must be json"}`
-		return false, http.StatusBadRequest, badmess
+	if !(ct == "application/json" ||
+		ct == "application/json; charset=UTF-8") {
+		return false, http.StatusBadRequest, `{"message": "Request must be json"}`
 	}
 	return true, http.StatusOK, ""
+}
+
+// HTTPRequest describes a single HTTP request with headers and a destination object for the response.
+type HTTPRequest struct {
+	URL     string
+	Headers map[string]string
+	Result  interface{} // Pointer to the struct to unmarshal into
+}
+
+// HTTPResponse contains the HTTP status code and any error.
+type HTTPResponse struct {
+	StatusCode int
+	Err        error
+}
+
+func (a *App) fetchAndUnmarshalRequests(requests []HTTPRequest) []HTTPResponse {
+	var wg sync.WaitGroup
+	responses := make([]HTTPResponse, len(requests))
+
+	for i, req := range requests {
+		wg.Add(1)
+		go func(idx int, r HTTPRequest) {
+			defer wg.Done()
+			httpReq, err := http.NewRequest("GET", r.URL, nil)
+			if err != nil {
+				responses[idx] = HTTPResponse{Err: err}
+				return
+			}
+			for k, v := range r.Headers {
+				httpReq.Header.Set(k, v)
+			}
+			resp, err := http.DefaultClient.Do(httpReq)
+			if err != nil {
+				responses[idx] = HTTPResponse{Err: err}
+				return
+			}
+			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				responses[idx] = HTTPResponse{StatusCode: resp.StatusCode, Err: err}
+				return
+			}
+			if r.Result != nil {
+				a.Log.Info().Msgf("Body is [%s]", body)
+				if err := json.Unmarshal(body, r.Result); err != nil {
+					responses[idx] = HTTPResponse{StatusCode: resp.StatusCode, Err: err}
+					return
+				}
+			}
+			responses[idx] = HTTPResponse{StatusCode: resp.StatusCode}
+		}(i, req)
+	}
+	wg.Wait()
+	return responses
 }
 
 func ValidThing(URL, x, thingType, UUID string) bool {

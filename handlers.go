@@ -1,33 +1,178 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
-	"io"
-	"log"
+	"gorm.io/gorm"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 // ----------------------------------------------------------------------------
 
-func (a *App) getStatus(w http.ResponseWriter, _ *http.Request) {
+type HttpBinGet struct {
+	URL     string            `json:"url"`
+	Headers map[string]string `json:"headers"`
+}
+type HttpBinStatus struct {
+	Message string `json:"message"`
+}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	mess := `{"message": "System running...", "version": "`+os.Getenv("VERSION")+`"}`
-	if _, err := io.WriteString(w, mess); err != nil {
-		log.Fatal(err)
+func (a *App) createReview(c *gin.Context) {
+
+	a.Log.Info().Msg("In createReview")
+
+	b, st, mess := a.bouncerSaysOk(c)
+	if !b {
+		c.JSON(st, gin.H{"message": mess})
+		return
+	}
+	publicId := mess
+	xhdr := c.GetHeader("X-Access-Token")
+	a.Log.Debug().Msgf("Public Id is [%s]", publicId)
+	var rv Review
+	var err error
+	if err = c.ShouldBindJSON(&rv); err != nil {
+		a.Log.Info().Msgf("Input data does not match review: [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
 	}
 
+	if rv.ReviewedBy.String() != publicId {
+		a.Log.Info().Msg("Supplied reviewedBy id does not match publicId")
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+
+	// check auction id and item id's here
+	var item Item
+	var auction Auction
+	var itemAll map[string]any
+	requests := []HTTPRequest{
+		{
+			URL:     os.Getenv("ITEMURL")+rv.ItemId.String(),
+			Headers: map[string]string{"x-access-token": xhdr,
+				                       "Content-Type": "application/json"},
+			Result:  &itemAll,
+		},
+		{
+			URL:     os.Getenv("AUCTIONURL")+rv.AuctionId.String(),
+			Headers: map[string]string{"x-access-token": xhdr,
+				                       "Content-Type": "application/json"},
+			Result:  &auction,
+		},
+	}
+
+	results := a.fetchAndUnmarshalRequests(requests)
+
+	_, err = json.Marshal(results)
+	if err != nil {
+		a.Log.Info().Msgf("Error marshalling to json [%s]", err.Error())
+	}
+
+	a.Log.Info().Msgf("Item is [%s]", item)
+	// now we have the item and auction deets we can check them
+	// TODO: business logic goes ere
+
+	var reviewId uuid.UUID
+	reviewId, err = uuid.NewRandom()
+	if err != nil {
+		a.Log.Info().Msgf("Create review failed: [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+
+	rv.ReviewId = reviewId
+
+	res := a.DB.Create(&rv)
+	if res.Error != nil {
+		a.Log.Info().Msgf("Review creation failed: [%s]", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went bang."})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"review_id": reviewId})
+	//c.JSON(http.StatusCreated, gin.H{"item": itemAll})
 }
 
 // ----------------------------------------------------------------------------
 
+func (a *App) getReview(c *gin.Context) {
+
+	b, st, mess := checkRequest(c)
+	if !b {
+		c.JSON(st, gin.H{"message": mess})
+		return
+	}
+
+	rId, err := uuid.Parse(c.Param("rId"))
+	if err != nil {
+		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+
+	r := Review{ReviewId: rId}
+	res := a.DB.Find(&r)
+	if res.Error != nil {
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			a.Log.Info().Msgf("Review [%s] not found", r.ReviewId.String())
+			c.JSON(http.StatusNotFound, gin.H{"message": "Review not found"})
+			return
+		}
+		a.Log.Info().Msgf("Error finding review [%s]", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went pop"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"review": r})
+}
+
+// ----------------------------------------------------------------------------
+
+func (a *App) getReviewsByItem(c *gin.Context) {
+
+	itemId, err := uuid.Parse(c.Param("iId"))
+	if err != nil {
+		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+
+	rows, err := a.DB.Model(&Review{}).Where("item_id = ?", itemId).Rows()
+	defer rows.Close()
+	var reviews []Review
+
+	for rows.Next() {
+		var rv Review
+		a.DB.ScanRows(rows, &rv)
+		reviews = append(reviews, rv)
+	}
+	c.JSON(http.StatusOK, gin.H{"total_reviews": len(reviews), "reviews": reviews})
+	/*
+	r := Review{ItemId: itemId}
+	res := a.DB.Find(&r)
+	if res.Error != nil {
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			a.Log.Info().Msgf("Review [%s] not found", r.ReviewId.String())
+			c.JSON(http.StatusNotFound, gin.H{"message": "Review not found"})
+			return
+		}
+		a.Log.Info().Msgf("Error finding review [%s]", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went pop"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"review": r})
+
+	 */
+}
+
+
+/*
 func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
+//func (a *App) getAllMyReviews(c *gin.Context){
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -63,7 +208,7 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
+	reviews, err := getReviewsByInput(a.oDB, "reviewed_by", publicId, start, count)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -85,58 +230,9 @@ func (a *App) getAllMyReviews(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// ----------------------------------------------------------------------------
 
-func (a *App) getReview(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
-	b, st, mess := CheckRequest(r)
-	if !b {
-		w.WriteHeader(st)
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-
-	vars := mux.Vars(r)
-	reviewId := vars["reviewId"]
-
-	if !IsValidUUID(reviewId) {
-		w.WriteHeader(http.StatusBadRequest)
-		if _, err := io.WriteString(w, `{ "message": "Not a valid review ID" }`); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-
-	rev := Review{ReviewId: reviewId}
-	if err := rev.getReview(a.DB); err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			w.WriteHeader(http.StatusNotFound)
-		default:
-			log.Println("***********************************")
-			log.Print("Error is" + err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			if _, err := io.WriteString(w, `{ "message": "Oopsy somthing went wrong" }`); err != nil {
-				log.Fatal(err)
-			}
-		}
-		return
-	}
-
-	jsonData, _ := json.Marshal(rev)
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write(jsonData); err != nil {
-		log.Fatal(err)
-	}
-
-}
-
-// ----------------------------------------------------------------------------
-
+*/
+/*
 func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -164,7 +260,7 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rev := Review{ReviewId: reviewId, ReviewedBy: publicId}
-	res, err := rev.deleteReview(a.DB)
+	res, err := rev.deleteReview(a.oDB)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -185,78 +281,8 @@ func (a *App) deleteReview(w http.ResponseWriter, r *http.Request) {
 
 // ----------------------------------------------------------------------------
 
-func (a *App) createReview(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
-	b, st, mess := bouncerSaysOk(r)
-	if !b {
-		w.WriteHeader(st)
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	publicId := mess
-
-	var rev Review
-	if err := json.NewDecoder(r.Body).Decode(&rev); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mess = fmt.Sprintf("{ \"error\": \"%s\" }", err)
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}(r.Body)
-
-	reviewId, err := uuid.NewRandom()
-	if err != nil {
-		log.Fatal(err)
-	}
-	rev.ReviewId = reviewId.String()
-	rev.ReviewedBy = publicId
-
-	// need to run these calls in parallel
-	x := r.Header.Get("X-Access-Token")
-	if !ValidAuction(rev.AuctionId, publicId, x) {
-		w.WriteHeader(http.StatusBadRequest)
-		mess := `{ "message": "Auction does not exist" }`
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	/*
-	   if !ValidItem(rev.ItemId, x) {
-	       w.WriteHeader(http.StatusBadRequest)
-	       io.WriteString(w, `{ "message": "Item does not exist" }`)
-	       return
-	   }
-	*/
-	//TODO: Check that user actually won the auction
-
-	if err := rev.createReview(a.DB); err != nil {
-		log.Print(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		mess := `{ "message": "Oopsy somthing went wrong" }`
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
-	mess = fmt.Sprintf("{ \"review_id\": \"%s\" }", rev.ReviewId)
-	if _, err := io.WriteString(w, mess); err != nil {
-		log.Fatal(err)
-	}
-}
-
+*/
+/*
 // ----------------------------------------------------------------------------
 
 func (a *App) getAllReviewsByAuction(w http.ResponseWriter, r *http.Request) {
@@ -293,7 +319,7 @@ func (a *App) getAllReviewsByAuction(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	reviews, err := getReviewsByInput(a.DB, "auction_id", auctionId, start, count)
+	reviews, err := getReviewsByInput(a.oDB, "auction_id", auctionId, start, count)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -343,7 +369,7 @@ func (a *App) getReviewByItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rev := Review{ItemId: itemId}
-	if err := rev.getReviewByItem(a.DB); err != nil {
+	if err := rev.getReviewByItem(a.oDB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			w.WriteHeader(http.StatusNotFound)
@@ -394,7 +420,7 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
 
 	if r.FormValue("totalonly") != "" {
 		// just return the total count
-		total, err := getTotalReviews(a.DB, "seller", publicId)
+		total, err := getTotalReviews(a.oDB, "seller", publicId)
 		if err != nil {
 			log.Print(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
@@ -422,7 +448,7 @@ func (a *App) getAllReviewsAboutUser(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	reviews, err := getReviewsByInput(a.DB, "seller", publicId, start, count)
+	reviews, err := getReviewsByInput(a.oDB, "seller", publicId, start, count)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -473,7 +499,7 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 
 	if r.FormValue("totalonly") != "" {
 		// just return the total count
-		total, err := getTotalReviews(a.DB, "reviewed_by", publicId)
+		total, err := getTotalReviews(a.oDB, "reviewed_by", publicId)
 		if err != nil {
 			log.Print(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
@@ -501,7 +527,7 @@ func (a *App) getAllReviewsByUser(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
+	reviews, err := getReviewsByInput(a.oDB, "reviewed_by", publicId, start, count)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -551,7 +577,7 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get the total count of reviews by
-	totalReviewedBy, err := getTotalReviews(a.DB, "reviewed_by", publicId)
+	totalReviewedBy, err := getTotalReviews(a.oDB, "reviewed_by", publicId)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -563,7 +589,7 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get the total count of reviews of
-	totalReviewsOf, err := getTotalReviews(a.DB, "reviewed_by", publicId)
+	totalReviewsOf, err := getTotalReviews(a.oDB, "reviewed_by", publicId)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -574,7 +600,7 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	calculatedScore, err := getScore(a.DB, publicId)
+	calculatedScore, err := getScore(a.oDB, publicId)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -594,3 +620,5 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 	}
 	return
 }
+
+ */

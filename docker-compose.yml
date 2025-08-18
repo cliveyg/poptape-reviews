@@ -7,10 +7,17 @@ services:
       - "GOOS=${GOOS}"
       - "GOARCH=${GOARCH}"
       - "PORT=${PORT}"
-    image: poptape/reviews/api:v0.1
+    image: poptape/reviews/api:v${VERSION}
     ports:
       - "1244:${PORT}"
     restart: always
+    volumes:
+      - ${LOCAL_LOG_LOC}:/reviews/log
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10Mb"
+        max-file: "5"
     depends_on:
       - db
     networks:
