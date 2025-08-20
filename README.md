@@ -3,7 +3,7 @@
 
 
 
-Reviews microservice written in Go
+Reviews microservice written in Go using the Gorm ORM and Gin framework. 
 
 This microservice validates and stores review data in a Postgres database.
 Each review is unique per auction and user. i.e. a user cannot leave more
@@ -63,17 +63,17 @@ Expected return codes: [200, 404]
 ```
 
 ### To Do:
-* Refactor to use common code
+* ~~Refactor to use common code~~
 * ~~Return reviews by auction~~
 * ~~Return reviews by user~~
 * ~~Return reviews of user~~
 * Need to add check for auction winner
-* Need to check item is valid
+* ~~Need to check item is valid~~
 * ~~Fix some tests - some are failing even though the microservice works~~
 * Write more tests
-* Validate input
+* ~~Validate input~~
 * ~~Dockerize~~
 * Documentation
-* Refactor to use zerolog
-* Refactor to use gin
-* Refactor to use gorm
+* ~~Refactor to use zerolog~~
+* ~~Refactor to use gin~~
+* ~~Refactor to use gorm~~
