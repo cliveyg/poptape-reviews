@@ -3,14 +3,60 @@ package main
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"io"
+	"math"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 )
 
 // ----------------------------------------------------------------------------
 // h e l p e r   f u n c t i o n s
 // ----------------------------------------------------------------------------
+
+func CreateURLS(c *gin.Context, urls *[]interface{}, page, pagesize, totalPages *int, tc *int64) error {
+	var prev string
+	var next string
+	*totalPages = int(math.Ceil(float64(*tc)/float64(*pagesize)))
+	prev = `{ "prev_url": "`+os.Getenv("PREVNEXTURL")+c.Request.URL.Path+`?page=`+strconv.Itoa(*page-1)+`" }`
+	next = `{ "next_url": "`+os.Getenv("PREVNEXTURL")+c.Request.URL.Path+`?page=`+strconv.Itoa(*page+1)+`" }`
+
+	var prevobj map[string]interface{}
+	err := json.Unmarshal([]byte(prev), &prevobj)
+	if err != nil {
+		return err
+	}
+	var nextobj map[string]interface{}
+	err = json.Unmarshal([]byte(next), &nextobj)
+	if err != nil {
+		return err
+	}
+
+	if *page > 1 && *page < *totalPages {
+		// we have prev and next
+		*urls = append(*urls, prevobj)
+		*urls = append(*urls, nextobj)
+	} else if *page > 1 {
+		// only prev
+		*urls = append(*urls, prevobj)
+	} else if *page == *totalPages {
+		// no prev or next
+	} else if *page < *totalPages {
+		// only next
+		*urls = append(*urls, nextobj)
+	}
+	return nil
+}
+
+func Paginate(page, pagesize int) func(db *gorm.DB) *gorm.DB {
+	return func (db *gorm.DB) *gorm.DB {
+
+		offset := (page - 1) * pagesize
+		return db.Offset(offset).Limit(pagesize)
+	}
+}
 
 func checkRequest(c *gin.Context) (bool, int, string) {
 

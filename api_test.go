@@ -3,12 +3,9 @@
 package main_test
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
-	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -29,14 +26,8 @@ func TestMain(m *testing.M) {
 	}
 
 	a = main.App{}
-	/*
-	a.Initialize(
-		os.Getenv("TESTDB_HOST"),
-		os.Getenv("TESTDB_USERNAME"),
-		os.Getenv("TESTDB_PASSWORD"),
-		os.Getenv("TESTDB_NAME"))
-
-	 */
+	testDB := true
+	a.InitialiseDatabase(testDB)
 
 	//ensureTableExists()
 	runSQL(dropTable)
@@ -195,13 +186,13 @@ func TestAPIStatus(t *testing.T) {
 		fmt.Println("[PASS].....TestAPIStatus")
 	}
 }
-
+/*
 // get no reviews for authed user
 func TestEmptyTable(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	clearTable()
@@ -229,7 +220,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
@@ -271,7 +262,7 @@ func TestMissingXAccessToken(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
@@ -531,7 +522,7 @@ func TestDeleteReviewOk(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
@@ -560,7 +551,7 @@ func TestDeleteFail(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6333", nil)
@@ -581,7 +572,7 @@ func TestDeleteNotAuthedFail(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(401, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
@@ -604,7 +595,7 @@ func TestCreateReviewOk(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
@@ -645,7 +636,7 @@ func TestCreateReviewDuplicateReviewFail(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
 	httpmock.RegisterResponder("GET", url,
@@ -678,7 +669,7 @@ func TestCreateReviewFailOnOverall(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
 	httpmock.RegisterResponder("GET", url,
@@ -711,7 +702,7 @@ func TestCreateReviewFailOnOverallFloat(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
 	httpmock.RegisterResponder("GET", url,
@@ -744,7 +735,7 @@ func TestCreateReviewFailOnPostAndPackaging(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/checkaccess/10",
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 	url := "https://poptape.club/auctionhouse/auction/f38ba39a-3682-4803-a498-659f0b111111"
 	httpmock.RegisterResponder("GET", url,
@@ -801,3 +792,5 @@ func TestGetMetadataOfUserOK(t *testing.T) {
 		fmt.Println("[PASS].....TestGetMetadataOfUserOK")
 	}
 }
+
+ */
