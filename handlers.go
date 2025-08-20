@@ -66,7 +66,7 @@ func (a *App) createReview(c *gin.Context) {
 
 	a.Log.Info().Msgf("Item is [%s]", item)
 	// now we have the item and auction deets we can check them
-	// TODO: business logic goes ere
+	// TODO: business logic goes ere - need to check winner of auction matches user
 
 	var reviewId uuid.UUID
 	reviewId, err = uuid.NewRandom()
@@ -107,7 +107,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 		return
 	}
 
-	//TODO: add more possible values to order results
+	//TODO: add more possible values to orderby results
 	var oss string
 	if sort == "asc" || sort == "desc" {
 		oss = orderby + " " + sort
@@ -197,7 +197,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 		return
 	}
 
-	if totalPages < page {
+	if page > totalPages {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "page value is incorrect"})
 		return
 	}
@@ -286,80 +286,43 @@ func (a *App) getAllReviewsByUser(c *gin.Context) {
 // ----------------------------------------------------------------------------
 
 func (a *App) getMetadataOfUser(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"user_review_metadata": "blah"})
-}
 
-/*
-
-// ----------------------------------------------------------------------------
-
-func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
-	b, st, mess := CheckRequest(r)
+	b, st, mess := checkRequest(c)
 	if !b {
-		w.WriteHeader(st)
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	vars := mux.Vars(r)
-	publicId := vars["publicId"]
-
-	if !IsValidUUID(publicId) {
-		w.WriteHeader(http.StatusBadRequest)
-		mess := `{ "message": "Not a valid public ID" }`
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
+		c.JSON(st, gin.H{"message": mess})
 		return
 	}
 
-	// get the total count of reviews by
-	totalReviewedBy, err := getTotalReviews(a.ODB, "reviewed_by", publicId)
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		log.Print(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		mess := `{ "message": "Oopsy somthing went wrong" }`
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
+		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
 		return
 	}
 
-	// get the total count of reviews of
-	totalReviewsOf, err := getTotalReviews(a.ODB, "reviewed_by", publicId)
+	// check user exists
+	sc := 999
+	err, sc = a.checkUserExists(c)
 	if err != nil {
-		log.Print(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		mess := `{ "message": "Oopsy somthing went wrong" }`
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
+		a.Log.Info().Msg(err.Error())
+		if sc == 404 {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User doesn't exist"})
+			return
 		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 		return
 	}
 
-	calculatedScore, err := getScore(publicId)
+	// get total records that match criteria
+	var totalReviewsOf int64
+	a.DB.Model(&Review{}).Where("seller = ?", id).Count(&totalReviewsOf)
+	var totalReviewsBy int64
+	a.DB.Model(&Review{}).Where("reviewed_by = ?", id).Count(&totalReviewsBy)
+	calculatedScore, err := getScore(id)
 	if err != nil {
-		log.Print(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		mess := `{ "message": "Oopsy somthing went wrong" }`
-		if _, err := io.WriteString(w, mess); err != nil {
-			log.Fatal(err)
-		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went splat"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	multiline := "{ \"total_reviews_of\": " + strconv.Itoa(totalReviewsOf) + " ,\n" +
-		" \"total_reviews_by\": " + strconv.Itoa(totalReviewedBy) + " ,\n" +
-		" \"calculated_score\": " + strconv.Itoa(calculatedScore) + " }"
-	if _, err := io.WriteString(w, multiline); err != nil {
-		log.Fatal(err)
-	}
-	return
+	c.JSON(http.StatusOK, gin.H{"public_id": id.String(), "score": calculatedScore, "total_reviews_of_user": totalReviewsOf, "total_reviews_by_user": totalReviewsBy})
 }
-
- */
