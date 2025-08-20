@@ -29,11 +29,14 @@ func TestMain(m *testing.M) {
 	}
 
 	a = main.App{}
+	/*
 	a.Initialize(
 		os.Getenv("TESTDB_HOST"),
 		os.Getenv("TESTDB_USERNAME"),
 		os.Getenv("TESTDB_PASSWORD"),
 		os.Getenv("TESTDB_NAME"))
+
+	 */
 
 	//ensureTableExists()
 	runSQL(dropTable)
@@ -48,7 +51,7 @@ func TestMain(m *testing.M) {
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	a.oRouter.ServeHTTP(rr, req)
+	a.ORouter.ServeHTTP(rr, req)
 
 	return rr
 }
@@ -63,20 +66,20 @@ func checkResponseCode(t *testing.T, expected, actual int) bool {
 }
 
 func clearTable() {
-	if _, err := a.oDB.Exec("DELETE FROM reviews"); err != nil {
+	if _, err := a.ODB.Exec("DELETE FROM reviews"); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func runSQL(sqltext string) {
-	if _, err := a.oDB.Exec(sqltext); err != nil {
+	if _, err := a.ODB.Exec(sqltext); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func getRecCount() int {
 
-	rows, err := a.oDB.Query("SELECT COUNT(*) AS count FROM reviews")
+	rows, err := a.ODB.Query("SELECT COUNT(*) AS count FROM reviews")
 	if err != nil {
 		log.Fatal(err)
 	}

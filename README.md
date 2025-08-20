@@ -57,7 +57,7 @@ Expected return codes: [200, 404]
 /reviews/auction/<auction_id> [GET] (Unauthenticated)
 
 Returns all reviews from a particular auction. As we can have several items
-per auction or just one this can vary a lot.
+per auction or just one this can vary a lot. Reviews once entered cannot be edited.
 Expected return codes: [200, 404]
 
 ```

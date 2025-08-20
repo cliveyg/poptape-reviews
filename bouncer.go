@@ -19,8 +19,7 @@ func (a *App) bouncerSaysOk(c *gin.Context) (bool, int, string) {
 
 	if !(ct == "application/json" ||
 		ct == "application/json; charset=UTF-8") {
-		bm = "Request must be json"
-		return false, http.StatusBadRequest, bm
+		return false, http.StatusBadRequest, "Request must be json"
 	}
 
 	x := c.GetHeader("X-Access-Token")
@@ -41,8 +40,7 @@ func (a *App) bouncerSaysOk(c *gin.Context) (bool, int, string) {
 		resp, e := client.Do(req)
 		if e != nil {
 			a.Log.Info().Msgf("HTTP req failed with [%s]", err.Error())
-			bm = "I'm sorry Dave"
-			return false, http.StatusServiceUnavailable, bm
+			return false, http.StatusServiceUnavailable, "I'm sorry Dave"
 		} else {
 			defer resp.Body.Close()
 			if resp.StatusCode == 200 {
