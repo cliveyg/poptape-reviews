@@ -21,7 +21,8 @@ func (a *App) InitialiseApp() {
 	a.Router = gin.Default()
 	//a.initialiseMiddleWare()
 	a.initialiseRoutes()
-	a.InitialiseDatabase()
+	testDB := false
+	a.InitialiseDatabase(testDB)
 }
 
 func (a *App) Run(port string) {

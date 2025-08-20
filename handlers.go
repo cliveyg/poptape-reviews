@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // ----------------------------------------------------------------------------
@@ -97,6 +98,23 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 		return
 	}
 
+	orderby := c.DefaultQuery("orderby", "created")
+	sort := c.DefaultQuery("sort", "desc")
+
+	if orderby != "created" {
+		a.Log.Info().Msgf("Not a valid orderby value: [%s]", orderby)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+
+	//TODO: add more possible values to order results
+	if sort != "asc" && sort != "desc" {
+		a.Log.Info().Msgf("Not a valid sort value: [%s]", sort)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+	oss := orderby + " " + sort
+
 	id, err := uuid.Parse(uuidst)
 	if err != nil {
 		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
@@ -104,8 +122,40 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 		return
 	}
 
-	//TODO: Pagination and order by
-	rows, err := a.DB.Model(&Review{}).Where(rk + " = ?", id).Rows()
+	var page int
+	page, err = strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	var ospsize int
+	ospsize, err = strconv.Atoi(os.Getenv("PAGESIZE"))
+	if err != nil {
+		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+	var pagesize int
+	pagesize, err = strconv.Atoi(c.DefaultQuery("pagesize", os.Getenv("PAGESIZE")))
+	if err != nil {
+		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		return
+	}
+	if pagesize > 100 || pagesize <= 0 {
+		pagesize = ospsize
+	}
+
+	// get total records that match criteria
+	var tc int64
+	a.DB.Model(&Review{}).Where(rk + " = ?", id).Count(&tc)
+
+	rows, err := a.DB.Scopes(Paginate(page, pagesize)).Model(&Review{}).Where(rk + " = ?", id).Order(oss).Rows()
 	if err != nil {
 		a.Log.Info().Msgf("Error fetching data: [%s]", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
@@ -132,11 +182,29 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 		}
 		reviews = append(reviews, rv)
 	}
-	if len(reviews) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"total_reviews": len(reviews)})
+	if tc == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"total_reviews": tc})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"total_reviews": len(reviews), "reviews": reviews})
+
+	// add prev/next url to output
+	var urls []interface{}
+	var totalPages int
+	if err = CreateURLS(c, &urls, &page, &pagesize, &totalPages, &tc); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if totalPages < page {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "page value is incorrect"})
+		return
+	}
+
+	if len(urls) > 0 {
+		c.JSON(http.StatusOK, gin.H{"total_reviews": tc, "total_pages": totalPages, "current_page": page, "urls": urls, "reviews": reviews})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"total_reviews": tc, "total_pages": totalPages, "current_page": page, "reviews": reviews})
 }
 
 // ----------------------------------------------------------------------------
@@ -154,7 +222,7 @@ func (a *App) getAllMyReviews(c *gin.Context) {
 		c.JSON(st, gin.H{"message": mess})
 		return
 	}
-	a.fetchReviewsByUUID(c, "review_id", mess)
+	a.fetchReviewsByUUID(c, "reviewed_by", mess)
 }
 
 // ----------------------------------------------------------------------------
@@ -213,6 +281,12 @@ func (a *App) getAllReviewsByUser(c *gin.Context) {
 	a.fetchReviewsByUUID(c, "reviewed_by", c.Param("id"))
 }
 
+// ----------------------------------------------------------------------------
+
+func (a *App) getMetadataOfUser(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"user_review_metadata": "blah"})
+}
+
 /*
 
 // ----------------------------------------------------------------------------
@@ -265,7 +339,7 @@ func (a *App) getMetadataOfUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	calculatedScore, err := getScore(a.ODB, publicId)
+	calculatedScore, err := getScore(publicId)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
 	"time"
@@ -75,7 +74,7 @@ func getTotalReviews(db *sql.DB, input_type, input_id string) (count int, err er
 
 // ----------------------------------------------------------------------------
 
-func getScore(db *sql.DB, public_id string) (count int, err error) {
+func getScore(public_id string) (count int, err error) {
 
 	fmt.Sprintf("public id is [%s]", public_id)
 
