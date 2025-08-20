@@ -108,12 +108,14 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 	}
 
 	//TODO: add more possible values to order results
-	if sort != "asc" && sort != "desc" {
+	var oss string
+	if sort == "asc" || sort == "desc" {
+		oss = orderby + " " + sort
+	} else {
 		a.Log.Info().Msgf("Not a valid sort value: [%s]", sort)
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
 		return
 	}
-	oss := orderby + " " + sort
 
 	id, err := uuid.Parse(uuidst)
 	if err != nil {
