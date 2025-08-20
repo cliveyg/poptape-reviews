@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
+	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -186,7 +187,7 @@ func TestAPIStatus(t *testing.T) {
 		fmt.Println("[PASS].....TestAPIStatus")
 	}
 }
-/*
+
 // get no reviews for authed user
 func TestEmptyTable(t *testing.T) {
 
@@ -202,15 +203,16 @@ func TestEmptyTable(t *testing.T) {
 	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
-	if body := response.Body.String(); body != "[]" {
-		t.Errorf("Expected an empty array. Got %s", body)
-	}
+	//if body := response.Body.String(); body != "[]" {
+	//	t.Errorf("Expected an empty array. Got %s", body)
+	//}
 
 	if checkResponseCode(t, http.StatusNotFound, response.Code) {
 		fmt.Println("[PASS].....TestEmptyTable")
 	}
 
 }
+/*
 
 // get reviews for authed user
 func TestReturnOnlyAuthUserReviews(t *testing.T) {

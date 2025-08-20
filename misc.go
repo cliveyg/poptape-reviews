@@ -2,7 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"io"
 	"math"
@@ -10,6 +13,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 )
 
 // ----------------------------------------------------------------------------
@@ -50,6 +54,8 @@ func CreateURLS(c *gin.Context, urls *[]interface{}, page, pagesize, totalPages 
 	return nil
 }
 
+// ----------------------------------------------------------------------------
+
 func Paginate(page, pagesize int) func(db *gorm.DB) *gorm.DB {
 	return func (db *gorm.DB) *gorm.DB {
 
@@ -57,6 +63,8 @@ func Paginate(page, pagesize int) func(db *gorm.DB) *gorm.DB {
 		return db.Offset(offset).Limit(pagesize)
 	}
 }
+
+// ----------------------------------------------------------------------------
 
 func checkRequest(c *gin.Context) (bool, int, string) {
 
@@ -69,11 +77,44 @@ func checkRequest(c *gin.Context) (bool, int, string) {
 	return true, http.StatusOK, ""
 }
 
+// ----------------------------------------------------------------------------
+
+func (a *App) checkUserExists(c *gin.Context) (error, int) {
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
+		return err, 418
+	}
+
+	var req *http.Request
+	req, err = http.NewRequest("GET", os.Getenv("AUTHYUSER")+id.String(), nil)
+	if err != nil {
+		a.Log.Info().Msgf("Error is [%s]", err.Error())
+		return err, 418
+	}
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	client := &http.Client{Timeout: time.Second * 10}
+	resp, e := client.Do(req)
+	if e != nil {
+		a.Log.Info().Msgf("HTTP req failed with [%s]", err.Error())
+		return e, 418
+	}
+	if resp.StatusCode == 200 {
+		return nil, resp.StatusCode
+	}
+
+	mess := fmt.Sprintf("Error fetching username. Status code is [%d]", resp.StatusCode)
+	return errors.New(mess), resp.StatusCode
+}
+
+// ----------------------------------------------------------------------------
+
 // HTTPRequest describes a single HTTP request with headers and a destination object for the response.
 type HTTPRequest struct {
 	URL     string
 	Headers map[string]string
-	Result  interface{} // Pointer to the struct to unmarshal into
+	Result  interface{} // pointer to the struct to unmarshal into
 }
 
 // HTTPResponse contains the HTTP status code and any error.
@@ -81,6 +122,8 @@ type HTTPResponse struct {
 	StatusCode int
 	Err        error
 }
+
+// ----------------------------------------------------------------------------
 
 func (a *App) fetchAndUnmarshalRequests(requests []HTTPRequest) []HTTPResponse {
 	var wg sync.WaitGroup
@@ -103,7 +146,13 @@ func (a *App) fetchAndUnmarshalRequests(requests []HTTPRequest) []HTTPResponse {
 				responses[idx] = HTTPResponse{Err: err}
 				return
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				err = Body.Close()
+				if err != nil {
+					responses[idx] = HTTPResponse{Err: err}
+					return
+				}
+			}(resp.Body)
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				responses[idx] = HTTPResponse{StatusCode: resp.StatusCode, Err: err}
@@ -121,5 +170,15 @@ func (a *App) fetchAndUnmarshalRequests(requests []HTTPRequest) []HTTPResponse {
 	}
 	wg.Wait()
 	return responses
+}
+
+// ----------------------------------------------------------------------------
+
+func getScore(publicId uuid.UUID) (count int, err error) {
+
+	res := fmt.Sprintf("public id is [%s]", publicId.String())
+	print(res)
+
+	return 89, nil
 }
 
