@@ -65,11 +65,12 @@ jobs:
       - name: Create .env file from github secrets
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
-                  import os
-          for q in (os.getenv("ENV_FILE")):
-            print(q)
-        shell: python
-      
+      - name: Set env as secret env:
+        run: |
+          MY_VAL: ${{ secrets.ENV_FILE }} 
+          for q in $(echo $MY_VAL | fold -w1); 
+          do echo $q done
+        shell: bash
       # run unit tests
       - name: Run go test and generate test coverage file
         run: |
