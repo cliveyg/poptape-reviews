@@ -67,7 +67,7 @@ jobs:
           echo "${{ secrets.ENV_FILE }}" > .env
       - name: Set env as secret env
         run: |
-          MY_VAL: ${{ secrets.ENV_FILE }} 
+          export MY_VAL=${{ secrets.ENV_FILE }} 
           for q in $(echo $MY_VAL | fold -w1); 
           do echo $q done
         shell: bash
