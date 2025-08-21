@@ -65,12 +65,12 @@ jobs:
       - name: Create .env file from github secrets
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
-      - name: testytest
-        env:
-          ENVF: ${{ secrets.ENV_FILE }}
-        run: |
-          echo "$ENVF" | base64
-        shell: bash
+      #- name: testytest
+      #  env:
+      #    ENVF: ${{ secrets.ENV_FILE }}
+      #  run: |
+      #    echo "$ENVF" | base64
+      #  shell: bash
       # run unit tests
       - name: Run go test and generate test coverage file
         run: |
