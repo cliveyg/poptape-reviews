@@ -68,10 +68,9 @@ jobs:
       - name: testytest
         env:
           ENVF: ${{ secrets.ENV_FILE }}
-      - run: |
+        run: |
           echo "$ENVF" | base64
         shell: bash
-
       # run unit tests
       - name: Run go test and generate test coverage file
         run: |
