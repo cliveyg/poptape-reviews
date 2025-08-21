@@ -68,8 +68,7 @@ jobs:
       - name: Set env as secret env
         run: |
           export MY_VAL=${{ secrets.ENV_FILE }} 
-          for q in $(echo $MY_VAL | fold -w1); 
-          do echo $q done
+          echo $MY_VAL
         shell: bash
       # run unit tests
       - name: Run go test and generate test coverage file
