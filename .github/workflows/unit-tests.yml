@@ -65,7 +65,10 @@ jobs:
       - name: Create .env file from github secrets
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
-          echo ${{secrets.ENV_FILE}} | sed 's/./& /g'
+                  import os
+          for q in (os.getenv("ENV_FILE")):
+            print(q)
+        shell: python
       
       # run unit tests
       - name: Run go test and generate test coverage file
