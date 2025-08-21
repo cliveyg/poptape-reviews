@@ -203,10 +203,6 @@ func TestEmptyTable(t *testing.T) {
 	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
-	//if body := response.Body.String(); body != "[]" {
-	//	t.Errorf("Expected an empty array. Got %s", body)
-	//}
-
 	if checkResponseCode(t, http.StatusNotFound, response.Code) {
 		fmt.Println("[PASS].....TestEmptyTable")
 	}
