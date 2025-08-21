@@ -31,6 +31,7 @@ func TestMain(m *testing.M) {
 	a = main.App{}
 	a.DB,err = ConnectToTestDB()
 	if err != nil {
+		log.Print(err.Error())
 		log.Fatal("Error connecting to DB")
 	}
 	log.Println("WOOP 2")
