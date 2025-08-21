@@ -8,6 +8,8 @@ import (
 	"github.com/cliveyg/poptape-reviews"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -27,8 +29,11 @@ func TestMain(m *testing.M) {
 	}
 
 	a = main.App{}
-	testDB := true
-	a.InitialiseDatabase(testDB)
+	a.DB,err = ConnectToTestDB()
+	if err != nil {
+		log.Fatal("Error connecting to DB")
+	}
+	log.Println("WOOP 2")
 
 	//ensureTableExists()
 	runSQL(dropTable)
@@ -39,6 +44,21 @@ func TestMain(m *testing.M) {
 	//clearTable()
 
 	os.Exit(code)
+}
+
+func ConnectToTestDB() (*gorm.DB, error) {
+
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
+		os.Getenv("TESTDB_USERNAME"),
+		os.Getenv("TESTDB_PASSWORD"),
+		os.Getenv("TESTDB_NAME"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"))
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {

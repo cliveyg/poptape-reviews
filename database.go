@@ -20,7 +20,7 @@ func (a *App) InitialiseDatabase(testDB bool) {
 	x := 1
 	for time.Since(start) < timeout {
 		a.Log.Info().Msgf("Trying to connect to db...[%d]", x)
-		a.DB, err = connectToDB(testDB)
+		a.DB, err = ConnectToDB(testDB)
 		if err == nil {
 			break
 		}
@@ -37,7 +37,7 @@ func (a *App) InitialiseDatabase(testDB bool) {
 	a.MigrateModels()
 }
 
-func connectToDB(testDB bool) (*gorm.DB, error) {
+func ConnectToDB(testDB bool) (*gorm.DB, error) {
 
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
 		os.Getenv("DB_USERNAME"),
