@@ -3,6 +3,7 @@ package main_test
 import (
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
+	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 	"time"
 )
 
-// NewAppForTest replicates your main setup but returns *App for use in test
+// NewAppForTest replicates main setup but returns *App for use in tests
 func NewAppForTest() *main.App {
 	err := godotenv.Load()
 	if err != nil {
@@ -26,7 +27,6 @@ func NewAppForTest() *main.App {
 	if err != nil {
 		panic(err)
 	}
-	// Note: We don't defer logFile.Close() here because the process is not short-lived like main()
 
 	// format logline
 	cw := zerolog.ConsoleWriter{Out: logFile, NoColor: true, TimeFormat: time.RFC3339}
@@ -60,27 +60,69 @@ func NewAppForTest() *main.App {
 	return a
 }
 
-var app *main.App
+var a *main.App
 
 func TestMain(m *testing.M) {
-	app = NewAppForTest()
+	a = NewAppForTest()
 	code := m.Run()
 	os.Exit(code)
 }
 
+//-----------------------------------------------------------------------------
+// h e l p e r   f u n c t i o n s
+//-----------------------------------------------------------------------------
+
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, req)
+	a.Router.ServeHTTP(rr, req)
 	return rr
 }
 
-// start of tests
+func checkResponseCode(t *testing.T, expected, actual int) bool {
+	if expected != actual {
+		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
+		return false
+	} else {
+		return true
+	}
+}
+
+func clearTable() {
+	res := a.DB.Where("1 = 1").Delete(&main.Review{})
+	if res.Error != nil {
+		a.Log.Fatal().Msg(res.Error.Error())
+	}
+}
+
+//-----------------------------------------------------------------------------
+// s t a r t   o f   t e s t s
+//-----------------------------------------------------------------------------
 
 func TestAPIStatus(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/reviews/status", nil)
 	response := executeRequest(req)
 
-	if response.Code != http.StatusOK {
-		t.Errorf("Expected status code 200, got %d", response.Code)
+	if checkResponseCode(t, http.StatusOK, response.Code) {
+		fmt.Println("[PASS].....TestAPIStatus")
 	}
+}
+
+func TestEmptyTable(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....TestEmptyTable")
+	}
+
 }
