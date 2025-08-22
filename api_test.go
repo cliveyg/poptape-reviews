@@ -74,7 +74,8 @@ func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	return rr
 }
 
-// Example test
+// start of tests
+
 func TestAPIStatus(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/status", nil)
 	response := executeRequest(req)

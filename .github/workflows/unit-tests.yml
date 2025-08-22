@@ -70,6 +70,7 @@ jobs:
         run: |
             set -e
             set -o pipefail
+            touch poptape_reviews.log
             go test -v ./... -cover -coverprofile=./cover.out | tee test.out
         shell: bash
       
