@@ -49,10 +49,11 @@ func TestMain(m *testing.M) {
 
 func ConnectToTestDB() (*gorm.DB, error) {
 
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s port=%d sslmode=disable",
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%d sslmode=disable",
 		os.Getenv("TESTDB_USERNAME"),
 		os.Getenv("TESTDB_PASSWORD"),
 		os.Getenv("TESTDB_NAME"),
+		"localhost",
 		5432)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
