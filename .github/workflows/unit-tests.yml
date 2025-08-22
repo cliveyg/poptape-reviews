@@ -94,7 +94,7 @@ jobs:
                 exit 1
             fi
             echo "-----------------------------------------------------------"
-            echo `go tool cover -func=cover.out`
+            echo `go tool cover -html=cover.out -o coverage.html`
       - name: Create coverage badges
         uses: gaelgirodon/ci-badges-action@v1
         with:

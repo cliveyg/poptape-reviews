@@ -2,9 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/go-faker/faker/v4"
 )
-
+/*
 func (a *App) InsertFakedDummyReviews(numRevs int) ([]Review, error) {
 
 	reviews := make([]Review, numRevs)
@@ -21,6 +20,7 @@ func (a *App) InsertFakedDummyReviews(numRevs int) ([]Review, error) {
 
 	return reviews, nil
 }
+*/
 
 func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 
