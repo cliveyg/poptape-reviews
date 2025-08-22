@@ -141,6 +141,43 @@ func TestEmptyTable(t *testing.T) {
 
 }
 
+func TestNoContentTypeHeader(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestNoContentTypeHeader")
+	}
+
+}
+
+func TestWrongContentTypeHeader(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/html; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestWrongContentTypeHeader")
+	}
+
+}
+
 func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 	clearTable()
@@ -162,7 +199,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
 
 	var revResp ReviewsResponse
-	json.NewDecoder(response.Body).Decode(&revResp)
+	err = json.NewDecoder(response.Body).Decode(&revResp)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -223,7 +260,7 @@ func TestGetReviewsByUser(t *testing.T) {
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
 
 	var revResp ReviewsResponse
-	json.NewDecoder(response.Body).Decode(&revResp)
+	err = json.NewDecoder(response.Body).Decode(&revResp)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -306,3 +343,157 @@ func Test404ForRandomURL(t *testing.T) {
 		fmt.Println("[PASS].....Test404ForRandomURL")
 	}
 }
+
+func TestGetReviewsByAuction(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/auction/e77be9e0-bb00-49bc-9e7d-d7cc7072ab8c", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if len(revResp.Reviews) != 2 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByAuction")
+	}
+}
+
+func TestGetReviewById(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6333", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if revResp.Reviews[0].ReviewedBy.String() != "f38ba39a-3682-4803-a498-659f0bf05000" {
+		noError = false
+		t.Errorf("reviewed by doesn't match")
+	}
+	if revResp.Reviews[0].AuctionId.String() != "e77be9e0-bb00-49bc-9e7d-d7cc7072ab33" {
+		noError = false
+		t.Errorf("auction id by doesn't match")
+	}
+	if revResp.Reviews[0].ItemId.String() != "7d1aa876-9be8-441f-ad86-daaa51872333" {
+		noError = false
+		t.Errorf("item id by doesn't match")
+	}
+	if revResp.Reviews[0].Seller.String() != "46d7d11c-fa06-4e54-8208-aaaaaaaa8888" {
+		noError = false
+		t.Errorf("item id by doesn't match")
+	}
+	if revResp.Reviews[0].Overall != 2 {
+		noError = false
+		t.Errorf("overall by doesn't match")
+	}
+	if revResp.Reviews[0].PapCost != 2 {
+		noError = false
+		t.Errorf("post_and_packaging by doesn't match")
+	}
+	if revResp.Reviews[0].Comm != 6 {
+		noError = false
+		t.Errorf("communication by doesn't match")
+	}
+	if revResp.Reviews[0].AsDesc != 1 {
+		noError = false
+		t.Errorf("as_described by doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewById")
+	}
+}
+
+func TestGetReviewByItem(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/item/7d1aa876-9be8-441f-ad86-d86e5faddd81", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if revResp.Reviews[0].ReviewId.String() != "e8f48256-2460-418f-81b7-86dad2aa6aaa" {
+		noError = false
+		t.Errorf("review id doesn't match")
+	}
+	if revResp.Reviews[0].ItemId.String() != "7d1aa876-9be8-441f-ad86-d86e5faddd81" {
+		noError = false
+		t.Errorf("item id doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewByItem")
+	}
+}
+
+func TestGetReviewsOfUser(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/of/user/46d7d11c-fa06-4e54-8208-95433b98cfc9", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for _, r := range revResp.Reviews {
+		if r.Seller.String() != "46d7d11c-fa06-4e54-8208-95433b98cfc9" {
+			noError = false
+			t.Errorf("reviewed by doesn't match")
+		}
+	}
+
+	if len(revResp.Reviews) != 3 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match: expected 3 and got %d", len(revResp.Reviews))
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsOfUser")
+	}
+}
+
