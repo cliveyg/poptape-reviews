@@ -19,6 +19,19 @@ type Review struct {
 	Created    time.Time `gorm:"autoCreateTime" json:"created"`
 }
 
+type ReviewsResponse struct {
+	CurrentPage 	int 		`json:"current_page"`
+	Reviews 		[]Review 	`json:"reviews"`
+	TotalPages  	int			`json:"total_pages"`
+	TotalReviews	int 		`json:"total_reviews"`
+	URLS			[]URL		`json:"urls"`
+}
+
+type URL struct {
+	PrevURL	string `json:"prev_url,omitempty"`
+	NextURL string `json:"next_url,omitempty"`
+}
+
 type Item struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`

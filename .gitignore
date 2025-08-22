@@ -19,6 +19,7 @@
 !database.go
 !middleware.go
 !api_test.go
+!api_test_fixtures.go
 !go.mod
 !go.sum
 !.github/workflows/unit-tests.yml

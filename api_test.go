@@ -1,8 +1,9 @@
-package main_test
+package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/cliveyg/poptape-reviews"
+	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
@@ -15,7 +16,7 @@ import (
 )
 
 // NewAppForTest replicates main setup but returns *App for use in tests
-func NewAppForTest() *main.App {
+func NewAppForTest() *App {
 	err := godotenv.Load()
 	if err != nil {
 		panic("Error loading .env file")
@@ -54,13 +55,13 @@ func NewAppForTest() *main.App {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
 
-	a := &main.App{}
+	a := &App{}
 	a.Log = &logger
 	a.InitialiseApp()
 	return a
 }
 
-var a *main.App
+var a *App
 
 func TestMain(m *testing.M) {
 	a = NewAppForTest()
@@ -88,10 +89,22 @@ func checkResponseCode(t *testing.T, expected, actual int) bool {
 }
 
 func clearTable() {
-	res := a.DB.Where("1 = 1").Delete(&main.Review{})
+	res := a.DB.Where("1 = 1").Delete(&Review{})
 	if res.Error != nil {
 		a.Log.Fatal().Msg(res.Error.Error())
 	}
+}
+
+func getCountForUUIDKey(key string, id uuid.UUID) int64 {
+	var tc int64
+	a.DB.Model(&Review{}).Where(key + " = ?", id).Count(&tc)
+	return tc
+}
+
+func getTotalRecordsInTable() int64 {
+	var tc int64
+	a.DB.Model(&Review{}).Count(&tc)
+	return tc
 }
 
 //-----------------------------------------------------------------------------
@@ -123,6 +136,51 @@ func TestEmptyTable(t *testing.T) {
 
 	if checkResponseCode(t, http.StatusNotFound, response.Code) {
 		fmt.Println("[PASS].....TestEmptyTable")
+	}
+
+}
+
+func TestReturnOnlyAuthUserReviews(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		a.Log.Fatal().Msg(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(revResp.Reviews) != 3 {
+		t.Errorf("no of reviews returned doesn't match; should be 3 but is %d", len(revResp.Reviews))
+		noError = false
+	}
+
+	for _, r := range revResp.Reviews {
+		u, _ := uuid.Parse("f38ba39a-3682-4803-a498-659f0bf05304")
+		if r.ReviewedBy != u {
+			t.Errorf("reviewed by doesn't match")
+			noError = false
+		}
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestReturnOnlyAuthUserReviews")
 	}
 
 }
