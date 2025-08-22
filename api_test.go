@@ -86,6 +86,8 @@ func clearTable() {
 
 func runSQL(sqltext string) {
 	if _, err := a.ODB.Exec(sqltext); err != nil {
+		log.Println("MEEP 1")
+		log.Print(err)
 		log.Fatal(err)
 	}
 }
