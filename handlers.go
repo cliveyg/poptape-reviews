@@ -247,7 +247,7 @@ func (a *App) deleteReview(c *gin.Context) {
 
 	res := a.DB.Where("reviewed_by = ?", pId).Delete(&Review{}, rId)
 	if res.Error != nil {
-		a.Log.Info().Msgf("Error deleting review [%s]", err.Error())
+		a.Log.Info().Msgf("Error deleting review [%s]", res.Error.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went pop"})
 		return
 	}

@@ -88,9 +88,10 @@ func checkResponseCode(t *testing.T, expected, actual int) bool {
 }
 
 func clearTable() {
-	err := a.DB.Where("1 = 1").Delete(&Review{})
-	if err != nil {
-		a.Log.Fatal().Msgf("Error is [%s]", err)
+	res := a.DB.Where("1 = 1").Delete(&Review{})
+	if res.Error != nil {
+		//a.Log.Info().Msgf("Error deleting all records in review table [%s]", res.Error.Error())
+		log.Fatal(res.Error.Error())
 	}
 }
 
