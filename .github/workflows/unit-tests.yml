@@ -94,6 +94,7 @@ jobs:
                 exit 1
             fi
             echo "-----------------------------------------------------------"
+            echo `cover.out`
       #echo `go tool cover -html=cover.out -o coverage.html`
       #echo `coverage.html`
       - name: Create coverage badges
