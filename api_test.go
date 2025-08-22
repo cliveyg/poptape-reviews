@@ -238,12 +238,12 @@ func TestGetReviewsByUser(t *testing.T) {
 
 	if len(revResp.Reviews) != 3 {
 		noError = false
-		t.Errorf("no of reviews returned on page [%s] doesn't match expected [3]", revResp.Reviews)
+		t.Errorf("no of reviews returned on page [%d] doesn't match expected [3]", len(revResp.Reviews))
 	}
 
 	if revResp.TotalReviews != 4 {
 		noError = false
-		t.Errorf("total no of reviews returned [%s] doesn't match data entered [4]", revResp.TotalReviews)
+		t.Errorf("total no of reviews returned [%d] doesn't match data entered [4]", revResp.TotalReviews)
 	}
 
 	if revResp.CurrentPage != 1 {
