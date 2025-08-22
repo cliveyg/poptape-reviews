@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (a *App) InitialiseDatabase(testDB bool) {
+func (a *App) InitialiseDatabase() {
 
 	// due to postgres docker container not starting
 	// up in time even with depends_on we have to keep
@@ -20,7 +20,7 @@ func (a *App) InitialiseDatabase(testDB bool) {
 	x := 1
 	for time.Since(start) < timeout {
 		a.Log.Info().Msgf("Trying to connect to db...[%d]", x)
-		a.DB, err = connectToDB(testDB)
+		a.DB, err = ConnectToDB()
 		if err == nil {
 			break
 		}
@@ -37,24 +37,14 @@ func (a *App) InitialiseDatabase(testDB bool) {
 	a.MigrateModels()
 }
 
-func connectToDB(testDB bool) (*gorm.DB, error) {
+func ConnectToDB() (*gorm.DB, error) {
 
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
 		os.Getenv("DB_USERNAME"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME"),
 		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-	)
-	if testDB {
-		dsn = fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-			os.Getenv("TESTDB_USERNAME"),
-			os.Getenv("TESTDB_PASSWORD"),
-			os.Getenv("TESTDB_NAME"),
-			os.Getenv("DB_HOST"),
-			os.Getenv("DB_PORT"),
-		)
-	}
+		os.Getenv("DB_PORT"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err

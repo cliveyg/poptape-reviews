@@ -25,7 +25,7 @@ jobs:
         # provide the login and db deets for postgres
         env:
           POSTGRES_DB: poptape_reviews_test
-          POSTGRES_PASSWORD: ${{ secrets.TESTDB_PASSWORD }}
+          POSTGRES_PASSWORD: "${{ secrets.TESTDB_PASSWORD }}"
           POSTGRES_USER: poptape_reviews_test
         ports:
           # maps tcp port 5432 on service container to the host
@@ -61,15 +61,18 @@ jobs:
       - name: Run go build
         run: go build -o /dev/null ./...
       
-      # have to create an .env file to be able to run unit tests 
+      # have to create an .env file to be able to run unit tests
       - name: Create .env file from github secrets
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
-      
       # run unit tests
       - name: Run go test and generate test coverage file
         run: |
+            set -e
+            set -o pipefail
+            touch poptape_reviews.log
             go test -v ./... -cover -coverprofile=./cover.out | tee test.out
+        shell: bash
       
       # and check test coverage percentage
       - name: Check test coverage is above threshold
