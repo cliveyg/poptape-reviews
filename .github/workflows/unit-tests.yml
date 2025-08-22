@@ -61,7 +61,7 @@ jobs:
       - name: Run go build
         run: go build -o /dev/null ./...
       
-      # have to create an .env file to be able to run unit tests 
+      # have to create an .env file to be able to run unit tests
       - name: Create .env file from github secrets
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
