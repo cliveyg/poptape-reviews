@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
@@ -31,6 +32,8 @@ func TestMain(m *testing.M) {
 	}
 
 	a = main.App{}
+	a.Router = gin.Default()
+	a.InitialiseRoutes()
 	a.DB,err = ConnectToTestDB()
 	if err != nil {
 		log.Print(err.Error())

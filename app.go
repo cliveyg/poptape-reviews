@@ -20,9 +20,8 @@ type App struct {
 func (a *App) InitialiseApp() {
 	a.Router = gin.Default()
 	//a.initialiseMiddleWare()
-	a.initialiseRoutes()
-	testDB := false
-	a.InitialiseDatabase(testDB)
+	a.InitialiseRoutes()
+	a.InitialiseDatabase()
 }
 
 func (a *App) Run(port string) {

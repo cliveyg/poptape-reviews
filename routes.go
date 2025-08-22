@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func (a *App) initialiseRoutes() {
+func (a *App) InitialiseRoutes() {
 
 	a.Log.Info().Msg("Initialising routes")
 
