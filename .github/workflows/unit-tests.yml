@@ -68,6 +68,8 @@ jobs:
       # run unit tests
       - name: Run go test and generate test coverage file
         run: |
+            set -e
+            set -o pipefail
             go test -v ./... -cover -coverprofile=./cover.out | tee test.out
       
       # and check test coverage percentage

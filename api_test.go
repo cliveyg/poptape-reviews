@@ -71,10 +71,18 @@ func ConnectToTestDB() (*gorm.DB, error) {
 	return db, nil
 }
 
+/*
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	a.ORouter.ServeHTTP(rr, req)
 
+	return rr
+}
+*/
+
+func executeRequest(req *http.Request) *httptest.ResponseRecorder {
+	rr := httptest.NewRecorder()
+	a.Router.ServeHTTP(rr, req)
 	return rr
 }
 
