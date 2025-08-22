@@ -27,6 +27,10 @@ type ReviewsResponse struct {
 	URLS			[]URL		`json:"urls"`
 }
 
+type CreateReviewResp struct {
+	ReviewId string `json:"review_id"`
+}
+
 type URL struct {
 	PrevURL	string `json:"prev_url,omitempty"`
 	NextURL string `json:"next_url,omitempty"`

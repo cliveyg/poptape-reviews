@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
@@ -588,7 +589,76 @@ func TestDeleteFail(t *testing.T) {
 	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
-	if checkResponseCode(t, http.StatusInternalServerError, response.Code) {
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
 		fmt.Println("[PASS].....TestDeleteFail")
 	}
+}
+
+func TestDeleteNotAuthedFail(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(401, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
+		fmt.Println("[PASS].....TestDeleteNotAuthedFail")
+	}
+}
+
+func TestCreateReviewOk(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	oldRecCnt := getTotalRecordsInTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	//auction_id, review, overall, pap_cost, communication, as_described)
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
+	var crep CreateReviewResp
+	err = json.NewDecoder(response.Body).Decode(&crep)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding JSON: " + err.Error())
+	}
+
+	if getTotalRecordsInTable() != oldRecCnt+1 {
+		noError = false
+		t.Errorf("Before and after record counts out by more than +1")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewOk")
+	}
+	log.Printf("Total call count is %d", httpmock.GetTotalCallCount())
+
 }
