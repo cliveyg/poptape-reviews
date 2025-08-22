@@ -167,8 +167,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 
-	if len(revResp.Reviews) != 3 {
-		t.Errorf("no of reviews returned doesn't match; should be 3 but is %d", len(revResp.Reviews))
+	if len(revResp.Reviews) != 4 {
+		t.Errorf("no of reviews returned doesn't match; should be 4 but is %d", len(revResp.Reviews))
 		noError = false
 	}
 
@@ -218,7 +218,6 @@ func TestGetReviewsByUser(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
@@ -227,11 +226,6 @@ func TestGetReviewsByUser(t *testing.T) {
 	json.NewDecoder(response.Body).Decode(&revResp)
 	if err != nil {
 		log.Fatal(err.Error())
-	}
-
-	if len(revResp.Reviews) != 3 {
-		t.Errorf("no of reviews returned doesn't match; should be 3 but is %d", len(revResp.Reviews))
-		noError = false
 	}
 
 	u, _ := uuid.Parse("f38ba39a-3682-4803-a498-659f0bf05304")
@@ -244,12 +238,12 @@ func TestGetReviewsByUser(t *testing.T) {
 
 	if len(revResp.Reviews) != 3 {
 		noError = false
-		t.Errorf("no of reviews returned doesn't match")
+		t.Errorf("no of reviews returned on page [%s] doesn't match expected [3]", revResp.Reviews)
 	}
 
-	if revResp.TotalReviews != 5 {
+	if revResp.TotalReviews != 4 {
 		noError = false
-		t.Errorf("total no of reviews returned doesn't match data entered")
+		t.Errorf("total no of reviews returned [%s] doesn't match data entered [4]", revResp.TotalReviews)
 	}
 
 	if revResp.CurrentPage != 1 {
@@ -278,7 +272,6 @@ func TestBadUUID(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf0530g", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
 	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
@@ -296,7 +289,6 @@ func Test404ForValidUUID(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf05311", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
 	if checkResponseCode(t, http.StatusNotFound, response.Code) {

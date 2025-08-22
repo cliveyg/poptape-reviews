@@ -84,6 +84,18 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 			"post_and_packaging": 2,
 			"communication": 6,
 			"as_described": 1
+		},
+		{
+			"review_id": "e8f48256-2460-418f-81b7-86dad2aa6002",
+			"review": "changed my life - for the worse",
+			"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304",
+			"auction_id": "e77be9e0-bb00-49bc-9e7d-d7cc7072cc22",
+			"item_id": "aabbccd6-9be8-441f-ad86-d86e5fad7878",
+			"seller": "aaaaaaaa-fa06-4e54-8208-95433b98cfc9",
+			"overall": 2,
+			"post_and_packaging": 8,
+			"communication": 8,
+			"as_described": 1
 		}
 	]`
 
