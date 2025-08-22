@@ -71,6 +71,7 @@ jobs:
             set -e
             set -o pipefail
             go test -v ./... -cover -coverprofile=./cover.out | tee test.out
+        shell: bash
       
       # and check test coverage percentage
       - name: Check test coverage is above threshold
