@@ -146,7 +146,6 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	clearTable()
 	_, err := a.InsertSpecificDummyReviews()
 	if err != nil {
-		//a.Log.Fatal().Msg(err.Error())
 		log.Fatal(err.Error())
 	}
 
@@ -165,7 +164,6 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	var revResp ReviewsResponse
 	json.NewDecoder(response.Body).Decode(&revResp)
 	if err != nil {
-		//t.Fatal(err)
 		log.Fatal(err.Error())
 	}
 
@@ -174,8 +172,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 		noError = false
 	}
 
+	u, _ := uuid.Parse("f38ba39a-3682-4803-a498-659f0bf05304")
 	for _, r := range revResp.Reviews {
-		u, _ := uuid.Parse("f38ba39a-3682-4803-a498-659f0bf05304")
 		if r.ReviewedBy != u {
 			t.Errorf("reviewed by doesn't match")
 			noError = false
@@ -186,4 +184,133 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 		fmt.Println("[PASS].....TestReturnOnlyAuthUserReviews")
 	}
 
+}
+
+func TestMissingXAccessToken(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
+		fmt.Println("[PASS].....TestMissingXAccessToken")
+	}
+}
+
+func TestGetReviewsByUser(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if len(revResp.Reviews) != 3 {
+		t.Errorf("no of reviews returned doesn't match; should be 3 but is %d", len(revResp.Reviews))
+		noError = false
+	}
+
+	u, _ := uuid.Parse("f38ba39a-3682-4803-a498-659f0bf05304")
+	for _, r := range revResp.Reviews {
+		if r.ReviewedBy != u {
+			noError = false
+			t.Errorf("reviewed by doesn't match")
+		}
+	}
+
+	if len(revResp.Reviews) != 3 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match")
+	}
+
+	if revResp.TotalReviews != 5 {
+		noError = false
+		t.Errorf("total no of reviews returned doesn't match data entered")
+	}
+
+	if revResp.CurrentPage != 1 {
+		noError = false
+		t.Errorf("current page is [%d] - should be 1", revResp.CurrentPage)
+	}
+
+	if revResp.TotalPages != 2 {
+		noError = false
+		t.Errorf("total pages doesn't match [%d] - should be 2", revResp.TotalPages)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByUser")
+	}
+
+}
+
+func TestBadUUID(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf0530g", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestBadUUID")
+	}
+}
+
+func Test404ForValidUUID(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf05311", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....Test404ForValidUUID")
+	}
+}
+
+func Test404ForRandomURL(t *testing.T) {
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a/someurl/999", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....Test404ForRandomURL")
+	}
 }
