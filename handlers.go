@@ -14,7 +14,7 @@ import (
 
 func (a *App) createReview(c *gin.Context) {
 
-	a.Log.Info().Msg("In createReview")
+	a.Log.Debug().Msg("In createReview")
 
 	b, st, mess := a.bouncerSaysOk(c)
 	if !b {
@@ -28,20 +28,21 @@ func (a *App) createReview(c *gin.Context) {
 	var err error
 	if err = c.ShouldBindJSON(&rv); err != nil {
 		a.Log.Info().Msgf("Input data does not match review: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 1"})
 		return
 	}
 
 	if rv.ReviewedBy.String() != publicId {
 		a.Log.Info().Msg("Supplied reviewedBy id does not match publicId")
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 2"})
 		return
 	}
 
 	// check auction id and item id's here
-	var item Item
-	var auction Auction
+	//var item Item
+	//var auction Auction
 	var itemAll map[string]any
+	var auctionAll map[string]any
 	requests := []HTTPRequest{
 		{
 			URL:     os.Getenv("ITEMURL")+rv.ItemId.String(),
@@ -53,7 +54,7 @@ func (a *App) createReview(c *gin.Context) {
 			URL:     os.Getenv("AUCTIONURL")+rv.AuctionId.String(),
 			Headers: map[string]string{"x-access-token": xhdr,
 				                       "Content-Type": "application/json"},
-			Result:  &auction,
+			Result:  &auctionAll,
 		},
 	}
 
@@ -64,7 +65,7 @@ func (a *App) createReview(c *gin.Context) {
 		a.Log.Info().Msgf("Error marshalling to json [%s]", err.Error())
 	}
 
-	a.Log.Info().Msgf("Item is [%s]", item)
+	//a.Log.Info().Msgf("Item is [%s]", item)
 	// now we have the item and auction deets we can check them
 	// TODO: business logic goes ere - need to check winner of auction matches user
 

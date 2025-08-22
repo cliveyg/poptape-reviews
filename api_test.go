@@ -1,11 +1,14 @@
-package main_test
+package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/cliveyg/poptape-reviews"
+	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,7 +18,7 @@ import (
 )
 
 // NewAppForTest replicates main setup but returns *App for use in tests
-func NewAppForTest() *main.App {
+func NewAppForTest() *App {
 	err := godotenv.Load()
 	if err != nil {
 		panic("Error loading .env file")
@@ -54,13 +57,13 @@ func NewAppForTest() *main.App {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
 
-	a := &main.App{}
+	a := &App{}
 	a.Log = &logger
 	a.InitialiseApp()
 	return a
 }
 
-var a *main.App
+var a *App
 
 func TestMain(m *testing.M) {
 	a = NewAppForTest()
@@ -88,10 +91,22 @@ func checkResponseCode(t *testing.T, expected, actual int) bool {
 }
 
 func clearTable() {
-	res := a.DB.Where("1 = 1").Delete(&main.Review{})
+	res := a.DB.Where("1 = 1").Delete(&Review{})
 	if res.Error != nil {
 		a.Log.Fatal().Msg(res.Error.Error())
 	}
+}
+
+func getCountForUUIDKey(key string, id uuid.UUID) int64 {
+	var tc int64
+	a.DB.Model(&Review{}).Where(key + " = ?", id).Count(&tc)
+	return tc
+}
+
+func getTotalRecordsInTable() int64 {
+	var tc int64
+	a.DB.Model(&Review{}).Count(&tc)
+	return tc
 }
 
 //-----------------------------------------------------------------------------
@@ -124,5 +139,529 @@ func TestEmptyTable(t *testing.T) {
 	if checkResponseCode(t, http.StatusNotFound, response.Code) {
 		fmt.Println("[PASS].....TestEmptyTable")
 	}
+
+}
+
+func TestNoContentTypeHeader(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestNoContentTypeHeader")
+	}
+
+}
+
+func TestWrongContentTypeHeader(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/html; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestWrongContentTypeHeader")
+	}
+
+}
+
+func TestReturnOnlyAuthUserReviews(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if len(revResp.Reviews) != 3 {
+		t.Errorf("no of reviews returned doesn't match; should be 3 but is %d", len(revResp.Reviews))
+		noError = false
+	}
+
+	u, _ := uuid.Parse("f38ba39a-3682-4803-a498-659f0bf05304")
+	for _, r := range revResp.Reviews {
+		if r.ReviewedBy != u {
+			t.Errorf("reviewed by doesn't match")
+			noError = false
+		}
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestReturnOnlyAuthUserReviews")
+	}
+
+}
+
+func TestMissingXAccessToken(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
+		fmt.Println("[PASS].....TestMissingXAccessToken")
+	}
+}
+
+func TestGetReviewsByUser(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	u, _ := uuid.Parse("f38ba39a-3682-4803-a498-659f0bf05304")
+	for _, r := range revResp.Reviews {
+		if r.ReviewedBy != u {
+			noError = false
+			t.Errorf("reviewed by doesn't match")
+		}
+	}
+
+	if len(revResp.Reviews) != 3 {
+		noError = false
+		t.Errorf("no of reviews returned on page [%d] doesn't match expected [3]", len(revResp.Reviews))
+	}
+
+	if revResp.TotalReviews != 4 {
+		noError = false
+		t.Errorf("total no of reviews returned [%d] doesn't match data entered [4]", revResp.TotalReviews)
+	}
+
+	if revResp.CurrentPage != 1 {
+		noError = false
+		t.Errorf("current page is [%d] - should be 1", revResp.CurrentPage)
+	}
+
+	if revResp.TotalPages != 2 {
+		noError = false
+		t.Errorf("total pages doesn't match [%d] - should be 2", revResp.TotalPages)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByUser")
+	}
+
+}
+
+func TestBadUUID(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf0530g", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestBadUUID")
+	}
+}
+
+func Test404ForValidUUID(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a-3682-4803-a498-659f0bf05311", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....Test404ForValidUUID")
+	}
+}
+
+func Test404ForRandomURL(t *testing.T) {
+
+	req, _ := http.NewRequest("GET", "/reviews/f38ba39a/someurl/999", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusNotFound, response.Code) {
+		fmt.Println("[PASS].....Test404ForRandomURL")
+	}
+}
+
+func TestGetReviewsByAuction(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/auction/e77be9e0-bb00-49bc-9e7d-d7cc7072ab8c", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if len(revResp.Reviews) != 2 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByAuction")
+	}
+}
+
+func TestGetReviewById(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6333", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if revResp.Reviews[0].ReviewedBy.String() != "f38ba39a-3682-4803-a498-659f0bf05000" {
+		noError = false
+		t.Errorf("reviewed by doesn't match")
+	}
+	if revResp.Reviews[0].AuctionId.String() != "e77be9e0-bb00-49bc-9e7d-d7cc7072ab33" {
+		noError = false
+		t.Errorf("auction id by doesn't match")
+	}
+	if revResp.Reviews[0].ItemId.String() != "7d1aa876-9be8-441f-ad86-daaa51872333" {
+		noError = false
+		t.Errorf("item id by doesn't match")
+	}
+	if revResp.Reviews[0].Seller.String() != "46d7d11c-fa06-4e54-8208-aaaaaaaa8888" {
+		noError = false
+		t.Errorf("item id by doesn't match")
+	}
+	if revResp.Reviews[0].Overall != 2 {
+		noError = false
+		t.Errorf("overall by doesn't match")
+	}
+	if revResp.Reviews[0].PapCost != 2 {
+		noError = false
+		t.Errorf("post_and_packaging by doesn't match")
+	}
+	if revResp.Reviews[0].Comm != 6 {
+		noError = false
+		t.Errorf("communication by doesn't match")
+	}
+	if revResp.Reviews[0].AsDesc != 1 {
+		noError = false
+		t.Errorf("as_described by doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewById")
+	}
+}
+
+func TestGetReviewByItem(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/item/7d1aa876-9be8-441f-ad86-d86e5faddd81", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if revResp.Reviews[0].ReviewId.String() != "e8f48256-2460-418f-81b7-86dad2aa6aaa" {
+		noError = false
+		t.Errorf("review id doesn't match")
+	}
+	if revResp.Reviews[0].ItemId.String() != "7d1aa876-9be8-441f-ad86-d86e5faddd81" {
+		noError = false
+		t.Errorf("item id doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewByItem")
+	}
+}
+
+func TestGetReviewsOfUser(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/of/user/46d7d11c-fa06-4e54-8208-95433b98cfc9", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for _, r := range revResp.Reviews {
+		if r.Seller.String() != "46d7d11c-fa06-4e54-8208-95433b98cfc9" {
+			noError = false
+			t.Errorf("reviewed by doesn't match")
+		}
+	}
+
+	if len(revResp.Reviews) != 3 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match: expected 3 and got %d", len(revResp.Reviews))
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsOfUser")
+	}
+}
+
+func TestGetReviewsByAnotherUser(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05000" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "somefaketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for _, r := range revResp.Reviews {
+		if r.ReviewedBy.String() != "f38ba39a-3682-4803-a498-659f0bf05304" {
+			noError = false
+			t.Errorf("reviewed by doesn't match")
+		}
+	}
+
+	if len(revResp.Reviews) != 3 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match")
+	}
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByAnotherUser")
+	}
+}
+
+func TestDeleteReviewOk(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("GET", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response = executeRequest(req)
+
+	noError = checkResponseCode(t, http.StatusNotFound, response.Code)
+	if noError {
+		fmt.Println("[PASS].....TestDeleteReviewOk")
+	}
+}
+
+func TestDeleteFail(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6333", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusBadRequest, response.Code) {
+		fmt.Println("[PASS].....TestDeleteFail")
+	}
+}
+
+func TestDeleteNotAuthedFail(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(401, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa6222", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	if checkResponseCode(t, http.StatusUnauthorized, response.Code) {
+		fmt.Println("[PASS].....TestDeleteNotAuthedFail")
+	}
+}
+
+func TestCreateReviewOk(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	oldRecCnt := getTotalRecordsInTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/items/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	//auction_id, review, overall, pap_cost, communication, as_described)
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
+	var crep CreateReviewResp
+	err = json.NewDecoder(response.Body).Decode(&crep)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+
+	if getTotalRecordsInTable() != oldRecCnt+1 {
+		noError = false
+		t.Errorf("Before and after record counts out by more than +1")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewOk")
+	}
+	log.Printf("Total call count is %d", httpmock.GetTotalCallCount())
 
 }
