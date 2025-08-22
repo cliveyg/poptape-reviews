@@ -41,7 +41,7 @@ jobs:
       # when installing golang deps
       - name: Install ca certs dependency
         run: |
-          apt-get update && apt-get install --yes --no-install-recommends ca-certificates
+          apt-get update && apt-get install --yes --no-install-recommends ca-certificates git
       
       - name: Check out the repo
         uses: actions/checkout@v4
