@@ -647,12 +647,15 @@ func TestCreateReviewOk(t *testing.T) {
 	response := executeRequest(req)
 
 	noError := checkResponseCode(t, http.StatusCreated, response.Code)
-	var crep CreateReviewResp
+	//var crep CreateReviewResp
+	var crep map[string]any
 	err = json.NewDecoder(response.Body).Decode(&crep)
 	if err != nil {
 		noError = false
 		t.Errorf("Error decoding returned JSON: " + err.Error())
 	}
+
+	t.Errorf("MEEEEP [%s]",crep)
 
 	if getTotalRecordsInTable() != oldRecCnt+1 {
 		noError = false
