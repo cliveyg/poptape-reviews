@@ -116,7 +116,7 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 
 const createJson = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
 "item_id": "f80689a6-9fba-4859-bdde-0a307c696ea8",
-"reviewed_by": "46d7d11c-fa06-4e54-8208-95433b98cfc9",
+"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf05304",
 "seller": "4a48341f-bcef-4362-9d80-24a4960507ea",
 "review": "amazing product",
 "overall": 4,
