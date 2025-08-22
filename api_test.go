@@ -7,6 +7,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -145,7 +146,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	clearTable()
 	_, err := a.InsertSpecificDummyReviews()
 	if err != nil {
-		a.Log.Fatal().Msg(err.Error())
+		//a.Log.Fatal().Msg(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	httpmock.Activate()
@@ -163,7 +165,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 	var revResp ReviewsResponse
 	json.NewDecoder(response.Body).Decode(&revResp)
 	if err != nil {
-		t.Fatal(err)
+		//t.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	if len(revResp.Reviews) != 3 {
