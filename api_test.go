@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/cliveyg/poptape-reviews"
+	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -15,6 +16,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 )
 
 var a main.App
@@ -37,8 +39,15 @@ func TestMain(m *testing.M) {
 	log.Println("WOOP 2")
 
 	//ensureTableExists()
-	runSQL(dropTable)
-	runSQL(tableCreationQuery)
+	//runSQL(dropTable)
+	err = a.DB.Migrator().DropTable(&Review{})
+	if err != nil {
+		log.Fatalf("Failed to drop table: %v", err)
+	}
+	err = a.DB.AutoMigrate(&Review{})
+	if err != nil {
+		log.Fatalf("Failed to create table: %v", err)
+	}
 
 	code := m.Run()
 
@@ -79,16 +88,9 @@ func checkResponseCode(t *testing.T, expected, actual int) bool {
 }
 
 func clearTable() {
-	if _, err := a.ODB.Exec("DELETE FROM reviews"); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func runSQL(sqltext string) {
-	if _, err := a.ODB.Exec(sqltext); err != nil {
-		log.Println("MEEP 1")
-		log.Print(err)
-		log.Fatal(err)
+	err := a.DB.Where("1 = 1").Delete(&Review{})
+	if err != nil {
+		a.Log.Fatal().Msgf("Error is [%s]", err)
 	}
 }
 
@@ -110,25 +112,6 @@ func checkCount(rows *sql.Rows) (count int) {
 	}
 	return count
 }
-
-const dropTable = `DROP TABLE IF EXISTS reviews`
-
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS reviews
-(
-    review_id CHAR(36) UNIQUE NOT NULL,
-    reviewed_by CHAR(36) NOT NULL,
-    auction_id CHAR(36) NOT NULL,
-    item_id CHAR(36) NOT NULL,
-    seller CHAR(36) NOT NULL,
-    review VARCHAR(2000),
-    overall INT NOT NULL DEFAULT 0,
-    pap_cost INT NOT NULL DEFAULT 0,
-    communication INT NOT NULL DEFAULT 0,
-    as_described INT NOT NULL DEFAULT 0,
-    created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    UNIQUE (reviewed_by, item_id),
-    CONSTRAINT reviews_pkey PRIMARY KEY (review_id)
-)`
 
 const insertDummyReviews = `INSERT INTO reviews 
 (review_id, reviewed_by, auction_id, item_id, 
@@ -175,7 +158,7 @@ const createJson = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
 "post_and_packaging": 3,
 "communication": 4,
 "as_described": 4}`
-
+/*
 type Review struct {
 	ReviewId   string `json:"review_id"`
 	Review     string `json:"review"`
@@ -188,6 +171,21 @@ type Review struct {
 	Comm       int    `json:"communication"`
 	AsDesc     int    `json:"as_described"`
 	Created    string `json:"created"`
+}
+*/
+
+type Review struct {
+	ReviewId   uuid.UUID `gorm:"type:uuid;primaryKey" json:"review_id"`
+	Review     string    `gorm:"type:varchar(2000)" json:"review"`
+	ReviewedBy uuid.UUID `gorm:"type:uuid;index" json:"reviewed_by" binding:"required"` // PublicId of reviewer
+	AuctionId  uuid.UUID `gorm:"type:uuid;index" json:"auction_id" binding:"required"`
+	ItemId     uuid.UUID `gorm:"type:uuid;index" json:"item_id" binding:"required"`
+	Seller     uuid.UUID `gorm:"type:uuid;index" json:"seller" binding:"required"` // PublicId of seller
+	Overall    int       `json:"overall" binding:"required"`
+	PapCost    int       `json:"post_and_packaging" binding:"required"`
+	Comm       int       `json:"communication" binding:"required"`
+	AsDesc     int       `json:"as_described" binding:"required"`
+	Created    time.Time `gorm:"autoCreateTime" json:"created"`
 }
 
 type CreateResp struct {
