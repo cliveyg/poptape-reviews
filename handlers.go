@@ -14,7 +14,7 @@ import (
 
 func (a *App) createReview(c *gin.Context) {
 
-	a.Log.Info().Msg("In createReview")
+	a.Log.Debug().Msg("In createReview")
 
 	b, st, mess := a.bouncerSaysOk(c)
 	if !b {
@@ -28,13 +28,13 @@ func (a *App) createReview(c *gin.Context) {
 	var err error
 	if err = c.ShouldBindJSON(&rv); err != nil {
 		a.Log.Info().Msgf("Input data does not match review: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 1"})
 		return
 	}
 
 	if rv.ReviewedBy.String() != publicId {
 		a.Log.Info().Msg("Supplied reviewedBy id does not match publicId")
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 2"})
 		return
 	}
 

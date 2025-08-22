@@ -635,6 +635,9 @@ func TestCreateReviewOk(t *testing.T) {
 	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/items/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
 	//auction_id, review, overall, pap_cost, communication, as_described)
 	payload := []byte(createJson)
 
@@ -648,7 +651,7 @@ func TestCreateReviewOk(t *testing.T) {
 	err = json.NewDecoder(response.Body).Decode(&crep)
 	if err != nil {
 		noError = false
-		t.Errorf("Error decoding JSON: " + err.Error())
+		t.Errorf("Error decoding returned JSON: " + err.Error())
 	}
 
 	if getTotalRecordsInTable() != oldRecCnt+1 {
