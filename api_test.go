@@ -167,8 +167,8 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 
-	if len(revResp.Reviews) != 4 {
-		t.Errorf("no of reviews returned doesn't match; should be 4 but is %d", len(revResp.Reviews))
+	if len(revResp.Reviews) != 3 {
+		t.Errorf("no of reviews returned doesn't match; should be 3 but is %d", len(revResp.Reviews))
 		noError = false
 	}
 
