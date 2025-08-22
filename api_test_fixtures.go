@@ -93,5 +93,11 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 		return nil, err
 	}
 
+	res := a.DB.Create(&reviews)
+	if res.Error != nil {
+		a.Log.Info().Msgf("Reviews creation failed: [%s]", err.Error())
+		return nil, res.Error
+	}
+
 	return reviews, nil
 }
