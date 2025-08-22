@@ -35,7 +35,7 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 			"overall": 5,
 			"post_and_packaging": 4,
 			"communication": 4,
-			"as_described": 3,
+			"as_described": 3
 		},
 		{
 			"review_id": "e8f48256-2460-418f-81b7-86dad2aa6aaa",
@@ -47,7 +47,7 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 			"overall": 5,
 			"post_and_packaging": 4,
 			"communication": 4,
-			"as_described": 3,
+			"as_described": 3
 		},
 		{
 			"review_id": "e8f48256-2460-418f-81b7-86dad2aa6111",
@@ -59,7 +59,7 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 			"overall": 4,
 			"post_and_packaging": 4,
 			"communication": 7,
-			"as_described": 8,
+			"as_described": 8
 		},
 		{
 			"review_id": "e8f48256-2460-418f-81b7-86dad2aa6222",
@@ -71,14 +71,8 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 			"overall": 10,
 			"post_and_packaging": 9,
 			"communication": 8,
-			"as_described": 9,
+			"as_described": 9
 		},
-	('e8f48256-2460-418f-81b7-86dad2aa6333',
-		'f38ba39a-3682-4803-a498-659f0bf05000',
-		'e77be9e0-bb00-49bc-9e7d-d7cc7072ab33',
-		'7d1aa876-9be8-441f-ad86-daaa51872333',
-		'46d7d11c-fa06-4e54-8208-aaaaaaaa8888',
-		'amaze balls product',4,4,4,3)
 		{
 			"review_id": "e8f48256-2460-418f-81b7-86dad2aa6333",
 			"review": "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat.tellus duis convallis. Tempus leo eu aenean sed diam urna tempor.",
@@ -89,8 +83,8 @@ func (a *App) InsertSpecificDummyReviews() ([]Review, error) {
 			"overall": 2,
 			"post_and_packaging": 2,
 			"communication": 6,
-			"as_described": 1,
-		},
+			"as_described": 1
+		}
 	]`
 
 	var reviews []Review
