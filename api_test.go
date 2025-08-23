@@ -441,7 +441,7 @@ func TestGetReviewById(t *testing.T) {
 		noError = false
 		t.Errorf("item id by doesn't match")
 	}
-	if revResp.Reviews[0].Seller.String() != "46d7d11c-fa06-4e54-8208-aaaaaaaa8888" {
+	if revResp.Reviews[0].Seller.String() != "f38ba39a-3682-4803-a498-659f0bf05304" {
 		noError = false
 		t.Errorf("item id by doesn't match")
 	}

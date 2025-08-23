@@ -303,37 +303,9 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "User doesn't exist"})
 			return
 		}
-		//c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-
-	/*
-	var req *http.Request
-	req, err = http.NewRequest("GET", os.Getenv("AUTHYUSER")+id.String(), nil)
-	if err != nil {
-		a.Log.Info().Msgf("Error is [%s]", err.Error())
-		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "Unable to verify user"})
-		return
-	}
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	client := &http.Client{Timeout: time.Second * 10}
-	resp, e := client.Do(req)
-	if e != nil {
-		a.Log.Info().Msgf("HTTP req failed with [%s]", err.Error())
-		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "Unable to verify user"})
-		return
-	}
-	if resp.StatusCode == 400 {
-		c.JSON(http.StatusNotFound, gin.H{"message": "User doesn't exist"})
-		return
-	}
-
-	if resp.StatusCode != 200 {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "Unable to verify user"})
-		return
-	}
-	*/
 
 	// get total records that match criteria
 	var totalReviewsOf int64
