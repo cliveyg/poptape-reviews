@@ -235,7 +235,7 @@ func TestBadAuthyJson(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
-		httpmock.NewStringResponder(500, `{"blah": badjson""}`))
+		httpmock.NewStringResponder(200, `{"blah": badjson""}`))
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -243,12 +243,12 @@ func TestBadAuthyJson(t *testing.T) {
 	response := executeRequest(req)
 
 	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
-	var resp map[string]any
+	var resp RespMessage
 	err = json.NewDecoder(response.Body).Decode(&resp)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if resp["message"] != "blah" {
+	if resp.Message != "Unable to decode response body" {
 		noError = false
 		t.Errorf("bad request message [%s] doesn't match expected", resp)
 	}
