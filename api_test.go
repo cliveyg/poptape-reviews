@@ -832,3 +832,93 @@ func TestGetReviewsByUserFailNoContentHeader(t *testing.T) {
 	}
 
 }
+
+func TestInvalidOrderBy(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?orderby=blah", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Not a valid orderby value" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidOrderBy")
+	}
+
+}
+
+func TestInvalidSortValue(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?sort=blah", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Not a valid sort value" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidSortValue")
+	}
+
+}
+
+func TestInvalidPageValue(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=a", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Not a valid page value" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidPageValue")
+	}
+
+}

@@ -97,7 +97,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 
 	if orderby != "created" {
 		a.Log.Info().Msgf("Not a valid orderby value: [%s]", orderby)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid orderby value"})
 		return
 	}
 
@@ -107,7 +107,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 		oss = orderby + " " + sort
 	} else {
 		a.Log.Info().Msgf("Not a valid sort value: [%s]", sort)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid sort value"})
 		return
 	}
 
@@ -121,8 +121,8 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 	var page int
 	page, err = strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil {
-		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		a.Log.Info().Msgf("Error in page value [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid page value"})
 		return
 	}
 	if page <= 0 {
