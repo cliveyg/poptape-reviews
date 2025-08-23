@@ -99,6 +99,7 @@ jobs:
         run: |
             go test -coverprofile=coverage.out ./...
             echo "Missed lines:"
+            echo `cat coverage.out`
             awk '!/^mode:/' coverage.out | while IFS="," read -r file lines count rest; do
               # Only proceed if all expected fields are present
               if [[ -n "$file" && -n "$lines" && -n "$count" ]]; then
