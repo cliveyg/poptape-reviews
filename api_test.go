@@ -1223,7 +1223,6 @@ func TestPaginationOK(t *testing.T) {
 	}
 	if revResp.URLS[0].PrevURL != pu.PrevURL {
 		noError = false
-		t.Error(revResp.URLS)
 		t.Errorf("Prev URL [%s] doesn't match expected", revResp.URLS[0].PrevURL)
 	}
 
