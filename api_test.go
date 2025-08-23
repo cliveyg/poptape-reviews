@@ -1118,14 +1118,7 @@ func TestGetMetadataOK(t *testing.T) {
 	response := executeRequest(req)
 
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
-	var mR RespMessage
-	err = json.NewDecoder(response.Body).Decode(&mR)
-	if err != nil {
-		noError = false
-		t.Errorf("Error decoding returned JSON: " + err.Error())
-	}
-	t.Errorf("mR.Message IS [%s]", mR.Message)
-	/*
+
 	var mResp MetadataResp
 	err = json.NewDecoder(response.Body).Decode(&mResp)
 	if err != nil {
@@ -1148,8 +1141,6 @@ func TestGetMetadataOK(t *testing.T) {
 		noError = false
 		t.Errorf("returned reviews of user [%d] doesn't match expected [89]", mResp.TotalReviewsOfUser)
 	}
-
-	 */
 
 	if noError {
 		fmt.Println("[PASS].....TestGetMetadataOK")
