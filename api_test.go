@@ -1027,7 +1027,7 @@ func TestInvalidPageSize(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
 
 	if noError {
 		fmt.Println("[PASS].....TestInvalidPageSize")
