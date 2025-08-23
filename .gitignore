@@ -17,7 +17,6 @@
 !routes.go
 !models.go
 !database.go
-!middleware.go
 !api_test.go
 !api_test_fixtures_test.go
 !go.mod

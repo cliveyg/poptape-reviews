@@ -19,7 +19,6 @@ type App struct {
 
 func (a *App) InitialiseApp() {
 	a.Router = gin.Default()
-	//a.initialiseMiddleWare()
 	a.InitialiseRoutes()
 	a.InitialiseDatabase()
 }
