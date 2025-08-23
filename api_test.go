@@ -822,6 +822,7 @@ func TestGetReviewsByUserFailNoContentHeader(t *testing.T) {
 		noError = false
 		t.Errorf("Error decoding returned JSON: " + err.Error())
 	}
+	t.Errorf("resp.Message is [%s]",resp.Message)
 	if resp.Message != "Request must be json" {
 		noError = false
 		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
