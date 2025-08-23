@@ -1113,16 +1113,20 @@ func TestGetMetadataOK(t *testing.T) {
 	response := executeRequest(req)
 
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
-	var mResp MetadataResp
+	//var mResp MetadataResp
+	var mResp map[string]any
 	err = json.NewDecoder(response.Body).Decode(&mResp)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
+	/*
 	if mResp.PublicId != "f38ba39a-3682-4803-a498-659f0bf05304" {
 		noError = false
 		t.Errorf("returned public id doesn't match sent id")
 	}
+
+	 */
 
 	t.Errorf("MEEP [%s]", mResp)
 
