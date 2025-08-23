@@ -1147,6 +1147,61 @@ func TestGetMetadataOK(t *testing.T) {
 	}
 }
 
+func TestGetMetadataFailSC500(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(500, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+
+	var mResp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&mResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if mResp.Message != "Error fetching username. Status code is [500]" {
+		noError = false
+		t.Errorf("Error fetching username message doesn't match")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailSC500")
+	}
+}
+
+func TestGetMetadataFailBadUUID(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf0530", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailBadUUID")
+	}
+}
+
 func TestGetMetadataFailNoContentTypeHdr(t *testing.T) {
 
 	clearTable()
