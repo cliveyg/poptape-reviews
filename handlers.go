@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 )
 
 // ----------------------------------------------------------------------------
@@ -296,7 +295,6 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 	}
 
 	// check user exists
-	/*
 	sc := 999
 	err, sc = a.checkUserExists(c)
 	if err != nil {
@@ -309,8 +307,7 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 		return
 	}
 
-	 */
-
+	/*
 	var req *http.Request
 	req, err = http.NewRequest("GET", os.Getenv("AUTHYUSER")+id.String(), nil)
 	if err != nil {
@@ -335,6 +332,7 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "Unable to verify user"})
 		return
 	}
+	*/
 
 	// get total records that match criteria
 	var totalReviewsOf int64
