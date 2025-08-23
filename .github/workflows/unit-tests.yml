@@ -94,13 +94,16 @@ jobs:
                 exit 1
             fi
             echo "-----------------------------------------------------------"
-      - name: Print missed lines
+      - name: TESTY Run tests with coverage
+        run: go test -coverprofile=coverage.out ./...
+      - name: TESTY Print missed lines
         run: |
-          awk '!/^mode:/' cover.out | while IFS=, read file start end count rest; do
+          awk '!/^mode:/' coverage.out | while IFS=, read file start end count rest; do
             if [ "$count" -eq 0 ]; then
               echo "$file:$start-$end"
             fi
           done
+
       #echo `go tool cover -html=cover.out -o coverage.html`
       #echo `coverage.html`
       - name: Create coverage badges
