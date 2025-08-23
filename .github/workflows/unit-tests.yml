@@ -94,15 +94,20 @@ jobs:
                 exit 1
             fi
             echo "-----------------------------------------------------------"
-      - name: TESTY Run tests with coverage
-        run: go test -coverprofile=coverage.out ./...
-      - name: TESTY Print missed lines
+      - name: List missed lines
         run: |
-          awk '!/^mode:/' coverage.out | while IFS=, read file start end count rest; do
-            if [ "$count" -eq 0 ]; then
-              echo "$file:$start-$end"
-            fi
-          done
+            go test -coverprofile=coverage.out ./...
+            go tool cover -func=coverage.out
+            echo "Missed lines:"
+            awk '/^mode:/ {next} {print $1, $2}' coverage.out | while read file lines; do
+              IFS="," read -ra parts <<< "$lines"
+              start=${parts[0]}
+              end=${parts[1]}
+              count=${parts[2]}
+              if [ "$count" -eq 0 ]; then
+                echo "$file:$start-$end"
+              fi
+            done
 
       #echo `go tool cover -html=cover.out -o coverage.html`
       #echo `coverage.html`
