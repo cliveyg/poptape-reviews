@@ -224,7 +224,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 }
 
-func TestBadAuthyURLEnv(t *testing.T) {
+func TestBadAuthyServiceError(t *testing.T) {
 
 	clearTable()
 	_, err := a.InsertSpecificDummyReviews()
@@ -232,21 +232,20 @@ func TestBadAuthyURLEnv(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 
-	t.Setenv("AUTHYURL", "dbwjbedjwbd")
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
-		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+		httpmock.NewStringResponder(500, `{}`))
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusUnauthorized, response.Code)
+	noError := checkResponseCode(t, http.StatusServiceUnavailable, response.Code)
 
 	if noError {
-		fmt.Println("[PASS].....TestBadAuthyURLEnv")
+		fmt.Println("[PASS].....TestBadAuthyServiceError")
 	}
 
 }
