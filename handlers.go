@@ -28,7 +28,7 @@ func (a *App) createReview(c *gin.Context) {
 	var err error
 	if err = c.ShouldBindJSON(&rv); err != nil {
 		a.Log.Info().Msgf("Input data does not match review: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 1"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Input data is incorrect"})
 		return
 	}
 

@@ -723,3 +723,43 @@ func TestCreateReviewFailBouncer(t *testing.T) {
 	}
 
 }
+
+func TestCreateReviewFailBadInput(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/items/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	payload := []byte(createJsonMissingReviewedBy)
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err := json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Input data is incorrect" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewFailBadInput")
+	}
+
+}
