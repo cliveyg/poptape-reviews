@@ -1107,8 +1107,9 @@ func TestGetMetadataOK(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	httpmock.RegisterResponder("GET", "https://poptape.club/authy/username/f38ba39a-3682-4803-a498-659f0bf05304",
-		httpmock.NewStringResponder(200, `{}`))
+	//=~^https://poptape.club/items/.
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/authy/username/.",
+		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
 
 	t.Errorf("AUTHYUSER URL IS [%s]", os.Getenv("AUTHYUSER"))
 
