@@ -77,8 +77,7 @@ jobs:
       # and check test coverage percentage
       - name: Check test coverage is above threshold
         env:
-          # TESTCOVERAGE_THRESHOLD: 55
-          TESTCOVERAGE_THRESHOLD: 50
+          TESTCOVERAGE_THRESHOLD: 75
         run: |
             echo "Checking test coverage is above threshold..."
             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
