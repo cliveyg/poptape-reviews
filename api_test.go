@@ -983,3 +983,84 @@ func TestInvalidPageSizeEnvVar(t *testing.T) {
 	}
 
 }
+
+func TestInvalidPageSizeQueryString(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?pagesize=a", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Error in pagesize querystring" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidPageSizeQueryString")
+	}
+
+}
+
+
+func TestInvalidPageSize(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?pagesize=200", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidPageSize")
+	}
+
+}
+
+func TestPageValueTooBig(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=10", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Page value is incorrect" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestPageValueTooBig")
+	}
+
+}

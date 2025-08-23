@@ -192,7 +192,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 	}
 
 	if page > totalPages {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "page value is incorrect"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Page value is incorrect"})
 		return
 	}
 
