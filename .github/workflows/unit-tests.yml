@@ -94,7 +94,13 @@ jobs:
                 exit 1
             fi
             echo "-----------------------------------------------------------"
-            echo `cover.out`
+      - name: Print missed lines
+        run: |
+          awk '!/^mode:/' cover.out | while IFS=, read file start end count rest; do
+            if [ "$count" -eq 0 ]; then
+              echo "$file:$start-$end"
+            fi
+          done
       #echo `go tool cover -html=cover.out -o coverage.html`
       #echo `coverage.html`
       - name: Create coverage badges
