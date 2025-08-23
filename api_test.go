@@ -1219,6 +1219,7 @@ func TestPaginationOK(t *testing.T) {
 
 	if revResp.URLS[0].NextURL != "https://prevnext.com/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=3" {
 		noError = false
+		t.Error(revResp.URLS)
 		t.Errorf("Next URL [%s] doesn't match expected", revResp.URLS[0].NextURL)
 	}
 
