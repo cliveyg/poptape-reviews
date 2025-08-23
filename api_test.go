@@ -1110,8 +1110,8 @@ func TestGetMetadataOK(t *testing.T) {
 	//=~^https://poptape.club/items/.
 	httpmock.RegisterResponder("GET", "=~^https://poptape.club/authy/username/.",
 		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
-	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
-		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+	//httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+	//	httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	//t.Errorf("AUTHYUSER URL IS [%s]", os.Getenv("AUTHYUSER"))
 
@@ -1121,6 +1121,13 @@ func TestGetMetadataOK(t *testing.T) {
 	response := executeRequest(req)
 
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var mR RespMessage
+	err = json.NewDecoder(response.Body).Decode(&mR)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	t.Errorf("mR.Message IS [%s]", mR.Message)
 	/*
 	var mResp MetadataResp
 	err = json.NewDecoder(response.Body).Decode(&mResp)

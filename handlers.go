@@ -303,7 +303,8 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "User doesn't exist"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+		//c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 

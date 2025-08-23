@@ -97,7 +97,7 @@ func (a *App) checkUserExists(c *gin.Context) (error, int) {
 	client := &http.Client{Timeout: time.Second * 10}
 	resp, e := client.Do(req)
 	if e != nil {
-		a.Log.Info().Msgf("HTTP req failed with [%s]", err.Error())
+		a.Log.Info().Msgf("HTTP req failed with [%s]", e.Error())
 		return e, 400
 	}
 	if resp.StatusCode == 200 {
