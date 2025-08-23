@@ -98,15 +98,17 @@ jobs:
         shell: bash
         run: |
             go test -coverprofile=coverage.out ./...
-            go tool cover -func=coverage.out
             echo "Missed lines:"
-            awk '/^mode:/ {next} {print $1, $2}' coverage.out | while read file lines; do
-              IFS="," read -ra parts <<< "$lines"
-              start=${parts[0]}
-              end=${parts[1]}
-              count=${parts[2]}
-              if [ "$count" -eq 0 ]; then
-                echo "$file:$start-$end"
+            awk '!/^mode:/' coverage.out | while IFS="," read -r file lines count rest; do
+              if [[ "$count" == "0" ]]; then
+                IFS="." read -ra parts <<< "$lines"
+                start_line="${parts[0]}"
+                end_line="${parts[1]}"
+                if [[ -z "$end_line" ]]; then
+                  echo "$file:$start_line"
+                else
+                  echo "$file:$start_line-$end_line"
+                fi
               fi
             done
 
