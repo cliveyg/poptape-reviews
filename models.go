@@ -67,5 +67,12 @@ type Auction struct {
 	Currency  string `json:"currency"`
 }
 
+type MetadataResp struct {
+	PublicId           string `json:"public_id"`
+	Score              int    `json:"score"`
+	TotalReviewsByUser int    `json:"total_reviews_by_user"`
+	TotalReviewsOfUser int    `json:"total_reviews_of_user"`
+}
+
 // ----------------------------------------------------------------------------
 
