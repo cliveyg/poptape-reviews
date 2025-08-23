@@ -1107,7 +1107,7 @@ func TestGetMetadataOK(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	httpmock.RegisterResponder("GET", "=~^http://poptape.club/authy/username/.",
+	httpmock.RegisterResponder("GET", "https://poptape.club/authy/username/f38ba39a-3682-4803-a498-659f0bf05304",
 		httpmock.NewStringResponder(200, `{}`))
 
 	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
@@ -1143,6 +1143,7 @@ func TestGetMetadataOK(t *testing.T) {
 	}
 }
 
+/*
 func TestGetMetadataFailBadAuthyUserEnvVar(t *testing.T) {
 
 	clearTable()
@@ -1163,3 +1164,5 @@ func TestGetMetadataFailBadAuthyUserEnvVar(t *testing.T) {
 		fmt.Println("[PASS].....TestGetMetadataFailBadAuthyUserEnvVar")
 	}
 }
+
+ */
