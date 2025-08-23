@@ -34,7 +34,7 @@ func (a *App) createReview(c *gin.Context) {
 
 	if rv.ReviewedBy.String() != publicId {
 		a.Log.Info().Msg("Supplied reviewedBy id does not match publicId")
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 2"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Reviewer doesn't match logged in user"})
 		return
 	}
 
