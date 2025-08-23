@@ -99,20 +99,34 @@ jobs:
         run: |
           go test -coverprofile=coverage.out ./...
           echo "Missed lines:"
-          awk 'BEGIN{ORS=" "} /^mode:/{next} {gsub(/\r?\n/, " ")} {print}' coverage.out | \
-          tr ' ' '\n' | \
-          grep -v '^mode:' | \
-          while IFS=, read -r file lines stmts count; do
-            if [[ "$count" == "0" ]]; then
-              startline=$(echo "$lines" | cut -d. -f1 | cut -d, -f1)
-              endline=$(echo "$lines" | cut -d, -f2 | cut -d. -f1)
-              if [[ "$startline" == "$endline" ]] || [[ -z "$endline" ]]; then
-                echo "$file:$startline"
-              else
-                echo "$file:$startline-$endline"
-              fi
-            fi
-          done
+          awk '
+            BEGIN { OFS=" " }
+            /^mode:/ { next }
+            {
+              for (i = 1; i <= NF; i += 4) {
+                block = $i
+                stmts = $(i+1)
+                count = $(i+2)
+                if (count == "0") {
+                  split(block, parts, ":")
+                  file = parts[1]
+                  rest = parts[2]
+                  split(rest, lines, ",")
+                  start = lines[1]
+                  end = lines[2]
+                  split(start, start_parts, ".")
+                  split(end, end_parts, ".")
+                  start_line = start_parts[1]
+                  end_line = end_parts[1]
+                  if (start_line == end_line) {
+                    print file ":" start_line
+                  } else {
+                    print file ":" start_line "-" end_line
+                  }
+                }
+              }
+            }
+          ' coverage.out
 
       #echo `go tool cover -html=cover.out -o coverage.html`
       #echo `coverage.html`
