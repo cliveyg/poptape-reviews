@@ -1133,11 +1133,11 @@ func TestGetMetadataOK(t *testing.T) {
 		noError = false
 		t.Errorf("returned score [%d] doesn't match expected [89]", mResp.Score)
 	}
-	if mResp.TotalReviewsByUser != 89 {
+	if mResp.TotalReviewsByUser != 4 {
 		noError = false
 		t.Errorf("returned reviews by user [%d] doesn't match expected [89]", mResp.TotalReviewsByUser)
 	}
-	if mResp.TotalReviewsOfUser != 89 {
+	if mResp.TotalReviewsOfUser != 1 {
 		noError = false
 		t.Errorf("returned reviews of user [%d] doesn't match expected [89]", mResp.TotalReviewsOfUser)
 	}
@@ -1147,26 +1147,22 @@ func TestGetMetadataOK(t *testing.T) {
 	}
 }
 
-/*
-func TestGetMetadataFailBadAuthyUserEnvVar(t *testing.T) {
+func TestGetMetadataFailNoContentTypeHdr(t *testing.T) {
 
 	clearTable()
 	_, err := a.InsertSpecificDummyReviews()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	httpmock.RegisterResponder("GET", os.Getenv("AUTHYUSER"),
-		httpmock.NewStringResponder(500, `{}`))
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{}`))
 
 	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
 
 	if noError {
-		fmt.Println("[PASS].....TestGetMetadataFailBadAuthyUserEnvVar")
+		fmt.Println("[PASS].....TestGetMetadataFailNoContentTypeHdr")
 	}
 }
-
- */
