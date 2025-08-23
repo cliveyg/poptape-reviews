@@ -97,20 +97,25 @@ jobs:
       - name: List missed coverage lines
         shell: bash
         run: |
-          go test -coverprofile=coverage.out ./...
-          echo "Missed lines:"
-          awk '!/^mode:/' coverage.out | while IFS="," read -r file lines count rest; do
-            if [[ "$count" == "0" ]]; then
-              IFS="." read -ra parts <<< "$lines"
-              start_line="${parts[0]}"
-              end_line="${parts[1]}"
-              if [[ -z "$end_line" ]]; then
-                echo "$file:$start_line"
-              else
-                echo "$file:$start_line-$end_line"
+            go test -coverprofile=coverage.out ./...
+            echo "Missed lines:"
+            awk '!/^mode:/' coverage.out | while IFS="," read -r file lines count rest; do
+              # Only proceed if all expected fields are present
+              if [[ -n "$file" && -n "$lines" && -n "$count" ]]; then
+                count_trimmed="${count#"${count%%[![:space:]]*}"}" # Remove leading spaces
+                count_trimmed="${count_trimmed%"${count_trimmed##*[![:space:]]}"}" # Remove trailing spaces
+                if [[ "$count_trimmed" == "0" ]]; then
+                  IFS="." read -ra points <<< "$lines"
+                  start="${points[0]}"
+                  end="${points[1]}"
+                  if [[ -z "$end" ]]; then
+                    echo "$file:$start"
+                  else
+                    echo "$file:$start-$end"
+                  fi
+                fi
               fi
-            fi
-          done
+            done
 
       #echo `go tool cover -html=cover.out -o coverage.html`
       #echo `coverage.html`
