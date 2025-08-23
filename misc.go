@@ -72,7 +72,7 @@ func checkRequest(c *gin.Context) (bool, int, string) {
 
 	if !(ct == "application/json" ||
 		ct == "application/json; charset=UTF-8") {
-		return false, http.StatusBadRequest, `{"message": "Request must be json"}`
+		return false, http.StatusBadRequest, "Request must be json"
 	}
 	return true, http.StatusOK, ""
 }

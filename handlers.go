@@ -273,9 +273,9 @@ func (a *App) getAllReviewsAboutUser(c *gin.Context) {
 
 // ----------------------------------------------------------------------------
 
-//func (a *App) getAllReviewsByUser(c *gin.Context) {
-//	a.fetchReviewsByUUID(c, "reviewed_by", c.Param("id"))
-//}
+func (a *App) getAllReviewsByUser(c *gin.Context) {
+	a.fetchReviewsByUUID(c, "reviewed_by", c.Param("id"))
+}
 
 // ----------------------------------------------------------------------------
 
