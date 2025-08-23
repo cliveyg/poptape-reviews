@@ -441,7 +441,7 @@ func TestGetReviewById(t *testing.T) {
 		noError = false
 		t.Errorf("item id by doesn't match")
 	}
-	if revResp.Reviews[0].Seller.String() != "46d7d11c-fa06-4e54-8208-aaaaaaaa8888" {
+	if revResp.Reviews[0].Seller.String() != "f38ba39a-3682-4803-a498-659f0bf05304" {
 		noError = false
 		t.Errorf("item id by doesn't match")
 	}
@@ -1063,4 +1063,235 @@ func TestPageValueTooBig(t *testing.T) {
 		fmt.Println("[PASS].....TestPageValueTooBig")
 	}
 
+}
+
+func TestDeleteReviewFailBadUUID(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	req, _ := http.NewRequest("DELETE", "/reviews/e8f48256-2460-418f-81b7-86dad2aa622z", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Not a uuid string" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestDeleteReviewFailBadUUID")
+	}
+}
+
+func TestGetMetadataOK(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var mResp MetadataResp
+	err = json.NewDecoder(response.Body).Decode(&mResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if mResp.PublicId != "f38ba39a-3682-4803-a498-659f0bf05304" {
+		noError = false
+		t.Errorf("returned public id doesn't match sent id")
+	}
+	if mResp.Score != 89 {
+		noError = false
+		t.Errorf("returned score [%d] doesn't match expected [89]", mResp.Score)
+	}
+	if mResp.TotalReviewsByUser != 4 {
+		noError = false
+		t.Errorf("returned reviews by user [%d] doesn't match expected [89]", mResp.TotalReviewsByUser)
+	}
+	if mResp.TotalReviewsOfUser != 1 {
+		noError = false
+		t.Errorf("returned reviews of user [%d] doesn't match expected [89]", mResp.TotalReviewsOfUser)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataOK")
+	}
+}
+
+func TestGetMetadataFailSC500(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(500, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+
+	var mResp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&mResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if mResp.Message != "Error fetching username. Status code is [500]" {
+		noError = false
+		t.Errorf("Error fetching username message doesn't match")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailSC500")
+	}
+}
+
+func TestGetMetadataFailBadUUID(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf0530", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailBadUUID")
+	}
+}
+
+func TestGetMetadataFailNoContentTypeHdr(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailNoContentTypeHdr")
+	}
+}
+
+func TestPaginationOK(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	t.Setenv("PAGESIZE", "1")
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05000" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=2", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "somefaketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for _, r := range revResp.Reviews {
+		if r.ReviewedBy.String() != "f38ba39a-3682-4803-a498-659f0bf05304" {
+			noError = false
+			t.Errorf("reviewed by doesn't match")
+		}
+	}
+
+	if len(revResp.Reviews) != 1 {
+		noError = false
+		t.Errorf("no of reviews returned doesn't match")
+	}
+
+	if revResp.TotalReviews != 4 {
+		noError = false
+		t.Errorf("total no of reviews [%d] returned doesn't match expected [4]", revResp.TotalReviews)
+	}
+
+	if len(revResp.URLS) != 2 {
+		noError = false
+		t.Errorf("total no of reviews [%d] returned doesn't match expected [2]", len(revResp.URLS))
+	}
+
+	pu := URL{
+		PrevURL: "https://prevnext.com/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1",
+		NextURL: "https://prevnext.com/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=3",
+	}
+	if revResp.URLS[0].PrevURL != pu.PrevURL {
+		noError = false
+		t.Errorf("Prev URL [%s] doesn't match expected", revResp.URLS[0].PrevURL)
+	}
+
+	if revResp.URLS[1].NextURL != pu.NextURL  {
+		noError = false
+		t.Errorf("Prev URL [%s] doesn't match expected", revResp.URLS[1].NextURL)
+	}
+
+	if revResp.TotalPages != 4 {
+		noError = false
+		t.Errorf("Total pages [%d] doesn't match expected [4]", revResp.TotalPages)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestPaginationOK")
+	}
 }

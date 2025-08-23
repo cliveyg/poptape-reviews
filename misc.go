@@ -28,15 +28,10 @@ func CreateURLS(c *gin.Context, urls *[]interface{}, page, pagesize, totalPages 
 	next = `{ "next_url": "`+os.Getenv("PREVNEXTURL")+c.Request.URL.Path+`?page=`+strconv.Itoa(*page+1)+`" }`
 
 	var prevobj map[string]interface{}
-	err := json.Unmarshal([]byte(prev), &prevobj)
-	if err != nil {
-		return err
-	}
+	_ = json.Unmarshal([]byte(prev), &prevobj)
+
 	var nextobj map[string]interface{}
-	err = json.Unmarshal([]byte(next), &nextobj)
-	if err != nil {
-		return err
-	}
+	_ = json.Unmarshal([]byte(next), &nextobj)
 
 	if *page > 1 && *page < *totalPages {
 		// we have prev and next
@@ -84,21 +79,21 @@ func (a *App) checkUserExists(c *gin.Context) (error, int) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
-		return err, 418
+		return err, 400
 	}
 
 	var req *http.Request
 	req, err = http.NewRequest("GET", os.Getenv("AUTHYUSER")+id.String(), nil)
 	if err != nil {
 		a.Log.Info().Msgf("Error is [%s]", err.Error())
-		return err, 418
+		return err, 400
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	client := &http.Client{Timeout: time.Second * 10}
 	resp, e := client.Do(req)
 	if e != nil {
-		a.Log.Info().Msgf("HTTP req failed with [%s]", err.Error())
-		return e, 418
+		a.Log.Info().Msgf("HTTP req failed with [%s]", e.Error())
+		return e, 400
 	}
 	if resp.StatusCode == 200 {
 		return nil, resp.StatusCode

@@ -235,7 +235,7 @@ func (a *App) deleteReview(c *gin.Context) {
 	rId, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a uuid string"})
 		return
 	}
 
@@ -303,7 +303,7 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "User doesn't exist"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+		c.JSON(sc, gin.H{"message": err.Error()})
 		return
 	}
 
