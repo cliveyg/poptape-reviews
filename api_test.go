@@ -224,6 +224,41 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 }
 
+func TestBadAuthyJson(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"blah": badjson""}`))
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if resp.Message != "Unable to decode response body" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestBadAuthyServiceError")
+	}
+
+}
+
 func TestMissingXAccessToken(t *testing.T) {
 
 	clearTable()
@@ -663,5 +698,369 @@ func TestCreateReviewOk(t *testing.T) {
 		fmt.Println("[PASS].....TestCreateReviewOk")
 	}
 	log.Printf("Total call count is %d", httpmock.GetTotalCallCount())
+
+}
+
+func TestCreateReviewFailBouncer(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(401, `{}`))
+
+	//auction_id, review, overall, pap_cost, communication, as_described)
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+	noError := checkResponseCode(t, http.StatusUnauthorized, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewFailBouncer")
+	}
+
+}
+
+func TestCreateReviewFailBadInput1(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/items/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	payload := []byte(createJsonMissingReviewedBy)
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err := json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Input data is incorrect" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewFailBadInput1")
+	}
+
+}
+
+func TestCreateReviewFailBadInput2(t *testing.T) {
+
+	clearTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/items/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	payload := []byte(createJsonReviewedByIncorrect)
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err := json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Reviewer doesn't match logged in user" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewFailBadInput2")
+	}
+
+}
+
+func TestGetReviewsByUserFailNoContentHeader(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Request must be json" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByUserFailNoContentHeader")
+	}
+
+}
+
+func TestInvalidOrderBy(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?orderby=blah", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Not a valid orderby value" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidOrderBy")
+	}
+
+}
+
+func TestInvalidSortValue(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?sort=blah", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Not a valid sort value" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidSortValue")
+	}
+
+}
+
+func TestInvalidPageValue(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=a", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Not a valid page value" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidPageValue")
+	}
+
+}
+
+func TestNegativePageValue(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=-1", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+	var revResp ReviewsResponse
+	err = json.NewDecoder(response.Body).Decode(&revResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if revResp.CurrentPage != 1 {
+		noError = false
+		t.Errorf("Current page value [%d] incorrect. Should be 1", revResp.CurrentPage)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestNegativePageValue")
+	}
+
+}
+
+func TestInvalidPageSizeEnvVar(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	t.Setenv("PAGESIZE", "a")
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Error in pagesize env var" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidPageSizeEnvVar")
+	}
+
+}
+
+func TestInvalidPageSizeQueryString(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?pagesize=a", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Error in pagesize querystring" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidPageSizeQueryString")
+	}
+
+}
+
+
+func TestInvalidPageSize(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?pagesize=200", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestInvalidPageSize")
+	}
+
+}
+
+func TestPageValueTooBig(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=10", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Page value is incorrect" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestPageValueTooBig")
+	}
 
 }

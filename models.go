@@ -31,6 +31,10 @@ type CreateReviewResp struct {
 	ReviewId string `json:"review_id"`
 }
 
+type RespMessage struct {
+	Message string `json:"message"`
+}
+
 type URL struct {
 	PrevURL	string `json:"prev_url,omitempty"`
 	NextURL string `json:"next_url,omitempty"`

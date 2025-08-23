@@ -124,3 +124,22 @@ const createJson = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
 "post_and_packaging": 3,
 "communication": 4,
 "as_described": 4}`
+
+const createJsonMissingReviewedBy = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
+"item_id": "f80689a6-9fba-4859-bdde-0a307c696ea8",
+"seller": "4a48341f-bcef-4362-9d80-24a4960507ea",
+"review": "amazing product",
+"overall": 4,
+"post_and_packaging": 3,
+"communication": 4,
+"as_described": 4}`
+
+const createJsonReviewedByIncorrect = `{"auction_id":"f38ba39a-3682-4803-a498-659f0b111111",
+"item_id": "f80689a6-9fba-4859-bdde-0a307c696ea8",
+"reviewed_by": "f38ba39a-3682-4803-a498-659f0bf053aa",
+"seller": "4a48341f-bcef-4362-9d80-24a4960507ea",
+"review": "amazing product",
+"overall": 4,
+"post_and_packaging": 3,
+"communication": 4,
+"as_described": 4}`

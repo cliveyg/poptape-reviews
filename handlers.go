@@ -28,13 +28,13 @@ func (a *App) createReview(c *gin.Context) {
 	var err error
 	if err = c.ShouldBindJSON(&rv); err != nil {
 		a.Log.Info().Msgf("Input data does not match review: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 1"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Input data is incorrect"})
 		return
 	}
 
 	if rv.ReviewedBy.String() != publicId {
 		a.Log.Info().Msg("Supplied reviewedBy id does not match publicId")
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request 2"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Reviewer doesn't match logged in user"})
 		return
 	}
 
@@ -65,18 +65,11 @@ func (a *App) createReview(c *gin.Context) {
 		a.Log.Info().Msgf("Error marshalling to json [%s]", err.Error())
 	}
 
-	//a.Log.Info().Msgf("Item is [%s]", item)
 	// now we have the item and auction deets we can check them
 	// TODO: business logic goes ere - need to check winner of auction matches user
 
 	var reviewId uuid.UUID
-	reviewId, err = uuid.NewRandom()
-	if err != nil {
-		a.Log.Info().Msgf("Create review failed: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
-		return
-	}
-
+	reviewId, _ = uuid.NewRandom()
 	rv.ReviewId = reviewId
 
 	res := a.DB.Create(&rv)
@@ -104,7 +97,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 
 	if orderby != "created" {
 		a.Log.Info().Msgf("Not a valid orderby value: [%s]", orderby)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid orderby value"})
 		return
 	}
 
@@ -114,7 +107,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 		oss = orderby + " " + sort
 	} else {
 		a.Log.Info().Msgf("Not a valid sort value: [%s]", sort)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid sort value"})
 		return
 	}
 
@@ -128,8 +121,8 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 	var page int
 	page, err = strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil {
-		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		a.Log.Info().Msgf("Error in page value [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid page value"})
 		return
 	}
 	if page <= 0 {
@@ -139,15 +132,15 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 	var ospsize int
 	ospsize, err = strconv.Atoi(os.Getenv("PAGESIZE"))
 	if err != nil {
-		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		a.Log.Info().Msgf("Error in pagesize env var [%s]", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error in pagesize env var"})
 		return
 	}
 	var pagesize int
 	pagesize, err = strconv.Atoi(c.DefaultQuery("pagesize", os.Getenv("PAGESIZE")))
 	if err != nil {
-		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		a.Log.Info().Msgf("Error in pagesize querystring value [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Error in pagesize querystring"})
 		return
 	}
 	if pagesize > 100 || pagesize <= 0 {
@@ -199,7 +192,7 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 	}
 
 	if page > totalPages {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "page value is incorrect"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Page value is incorrect"})
 		return
 	}
 

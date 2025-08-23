@@ -40,6 +40,7 @@ func (a *App) InitialiseRoutes() {
 
 	a.Router.GET("/reviews/by/user/:id", func(c *gin.Context) {
 		a.getAllReviewsByUser(c)
+		//a.fetchReviewsByUUID(c, "reviewed_by", c.Param("id"))
 	})
 
 	a.Router.GET("/reviews/user/:id", func(c *gin.Context) {
