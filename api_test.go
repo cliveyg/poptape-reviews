@@ -1217,15 +1217,19 @@ func TestPaginationOK(t *testing.T) {
 		t.Errorf("total no of reviews [%d] returned doesn't match expected [2]", len(revResp.URLS))
 	}
 
-	if revResp.URLS[0].NextURL != "https://prevnext.com/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=3" {
+	pu := URL{
+		PrevURL: "https://prevnext.com/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1",
+		NextURL: "https://prevnext.com/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=3",
+	}
+	if revResp.URLS[0].PrevURL != pu.PrevURL {
 		noError = false
 		t.Error(revResp.URLS)
-		t.Errorf("Next URL [%s] doesn't match expected", revResp.URLS[0].NextURL)
+		t.Errorf("Prev URL [%s] doesn't match expected", revResp.URLS[0].PrevURL)
 	}
 
-	if revResp.URLS[1].PrevURL != "https://prevnext.com/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1" {
+	if revResp.URLS[1].NextURL != pu.NextURL  {
 		noError = false
-		t.Errorf("Prev URL [%s] doesn't match expected", revResp.URLS[1].PrevURL)
+		t.Errorf("Prev URL [%s] doesn't match expected", revResp.URLS[1].NextURL)
 	}
 
 	if revResp.TotalPages != 4 {
