@@ -95,6 +95,7 @@ jobs:
             fi
             echo "-----------------------------------------------------------"
       - name: List missed lines
+        shell: bash
         run: |
             go test -coverprofile=coverage.out ./...
             go tool cover -func=coverage.out
