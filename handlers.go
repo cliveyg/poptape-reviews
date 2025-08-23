@@ -65,18 +65,11 @@ func (a *App) createReview(c *gin.Context) {
 		a.Log.Info().Msgf("Error marshalling to json [%s]", err.Error())
 	}
 
-	//a.Log.Info().Msgf("Item is [%s]", item)
 	// now we have the item and auction deets we can check them
 	// TODO: business logic goes ere - need to check winner of auction matches user
 
 	var reviewId uuid.UUID
-	reviewId, err = uuid.NewRandom()
-	if err != nil {
-		a.Log.Info().Msgf("Create review failed: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
-		return
-	}
-
+	reviewId, _ = uuid.NewRandom()
 	rv.ReviewId = reviewId
 
 	res := a.DB.Create(&rv)

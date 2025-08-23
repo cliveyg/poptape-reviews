@@ -803,3 +803,32 @@ func TestCreateReviewFailBadInput2(t *testing.T) {
 	}
 
 }
+
+func TestGetReviewsByUserFailNoContentHeader(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Request must be json" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetReviewsByUserFailNoContentHeader")
+	}
+
+}
