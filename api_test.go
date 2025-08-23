@@ -1107,6 +1107,9 @@ func TestGetMetadataOK(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "=~username",
 		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
 
