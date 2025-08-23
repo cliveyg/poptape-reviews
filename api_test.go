@@ -1107,34 +1107,59 @@ func TestGetMetadataOK(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	httpmock.RegisterResponder("GET", os.Getenv("AUTHYUSER"),
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/authy/username/.",
 		httpmock.NewStringResponder(200, `{}`))
-
 
 	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
 	noError := checkResponseCode(t, http.StatusOK, response.Code)
-	//var mResp MetadataResp
-	var mResp map[string]any
+	var mResp MetadataResp
 	err = json.NewDecoder(response.Body).Decode(&mResp)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	/*
 	if mResp.PublicId != "f38ba39a-3682-4803-a498-659f0bf05304" {
 		noError = false
 		t.Errorf("returned public id doesn't match sent id")
 	}
-
-	 */
-
-	t.Errorf("MEEP [%s]", mResp)
+	if mResp.Score != 89 {
+		noError = false
+		t.Errorf("returned score [%d] doesn't match expected [89]", mResp.Score)
+	}
+	if mResp.TotalReviewsByUser != 89 {
+		noError = false
+		t.Errorf("returned reviews by user [%d] doesn't match expected [89]", mResp.TotalReviewsByUser)
+	}
+	if mResp.TotalReviewsOfUser != 89 {
+		noError = false
+		t.Errorf("returned reviews of user [%d] doesn't match expected [89]", mResp.TotalReviewsOfUser)
+	}
 
 	if noError {
 		fmt.Println("[PASS].....TestGetMetadataOK")
+	}
+}
+
+func TestGetMetadataFailBadAuthyUserEnvVar(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYUSER"),
+		httpmock.NewStringResponder(200, `{}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailBadAuthyUserEnvVar")
 	}
 }

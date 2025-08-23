@@ -84,21 +84,21 @@ func (a *App) checkUserExists(c *gin.Context) (error, int) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
-		return err, 418
+		return err, 400
 	}
 
 	var req *http.Request
 	req, err = http.NewRequest("GET", os.Getenv("AUTHYUSER")+id.String(), nil)
 	if err != nil {
 		a.Log.Info().Msgf("Error is [%s]", err.Error())
-		return err, 418
+		return err, 400
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	client := &http.Client{Timeout: time.Second * 10}
 	resp, e := client.Do(req)
 	if e != nil {
 		a.Log.Info().Msgf("HTTP req failed with [%s]", err.Error())
-		return e, 418
+		return e, 400
 	}
 	if resp.StatusCode == 200 {
 		return nil, resp.StatusCode
