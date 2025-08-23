@@ -132,15 +132,15 @@ func (a *App) fetchReviewsByUUID(c *gin.Context, rk, uuidst string) {
 	var ospsize int
 	ospsize, err = strconv.Atoi(os.Getenv("PAGESIZE"))
 	if err != nil {
-		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		a.Log.Info().Msgf("Error in pagesize env var [%s]", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error in pagesize env var"})
 		return
 	}
 	var pagesize int
 	pagesize, err = strconv.Atoi(c.DefaultQuery("pagesize", os.Getenv("PAGESIZE")))
 	if err != nil {
-		a.Log.Info().Msgf("Error in query string [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+		a.Log.Info().Msgf("Error in pagesize querystring value [%s]", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Error in pagesize querystring"})
 		return
 	}
 	if pagesize > 100 || pagesize <= 0 {
