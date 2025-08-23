@@ -171,6 +171,7 @@ func (a *App) fetchAndUnmarshalRequests(requests []HTTPRequest) []HTTPResponse {
 
 func getScore(publicId uuid.UUID) (count int, err error) {
 
+	//TODO: Calculate a score - preferably weighted towards more recent reviews
 	res := fmt.Sprintf("public id is [%s]", publicId.String())
 	print(res)
 
