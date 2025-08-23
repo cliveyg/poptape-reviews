@@ -700,3 +700,26 @@ func TestCreateReviewOk(t *testing.T) {
 	log.Printf("Total call count is %d", httpmock.GetTotalCallCount())
 
 }
+
+func TestCreateReviewFailBouncer(t *testing.T) {
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(401, `{}`))
+
+	//auction_id, review, overall, pap_cost, communication, as_described)
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+	noError := checkResponseCode(t, http.StatusUnauthorized, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewFailBouncer")
+	}
+
+}
