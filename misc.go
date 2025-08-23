@@ -28,15 +28,10 @@ func CreateURLS(c *gin.Context, urls *[]interface{}, page, pagesize, totalPages 
 	next = `{ "next_url": "`+os.Getenv("PREVNEXTURL")+c.Request.URL.Path+`?page=`+strconv.Itoa(*page+1)+`" }`
 
 	var prevobj map[string]interface{}
-	err := json.Unmarshal([]byte(prev), &prevobj)
-	if err != nil {
-		return err
-	}
+	_ = json.Unmarshal([]byte(prev), &prevobj)
+
 	var nextobj map[string]interface{}
-	err = json.Unmarshal([]byte(next), &nextobj)
-	if err != nil {
-		return err
-	}
+	_ = json.Unmarshal([]byte(next), &nextobj)
 
 	if *page > 1 && *page < *totalPages {
 		// we have prev and next
