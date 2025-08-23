@@ -224,7 +224,7 @@ func TestReturnOnlyAuthUserReviews(t *testing.T) {
 
 }
 
-func TestBadAuthyServiceError(t *testing.T) {
+func TestBadAuthyJson(t *testing.T) {
 
 	clearTable()
 	_, err := a.InsertSpecificDummyReviews()
@@ -235,14 +235,23 @@ func TestBadAuthyServiceError(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
-		httpmock.NewStringResponder(500, `{}`))
+		httpmock.NewStringResponder(500, `{"blah": badjson""}`))
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusServiceUnavailable, response.Code)
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp map[string]any
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if resp["message"] != "blah" {
+		noError = false
+		t.Errorf("bad request message [%s] doesn't match expected", resp)
+	}
 
 	if noError {
 		fmt.Println("[PASS].....TestBadAuthyServiceError")
