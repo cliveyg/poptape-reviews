@@ -235,7 +235,7 @@ func TestBadAuthyURLEnv(t *testing.T) {
 	t.Setenv("AUTHYURL", "dbwjbedjwbd")
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", os.Getenv("vv"),
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
 		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
 
 	req, _ := http.NewRequest("GET", "/reviews", nil)
