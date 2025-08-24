@@ -40,11 +40,26 @@ type URL struct {
 	NextURL string `json:"next_url,omitempty"`
 }
 
+type Scores struct {
+	MetaAverage 	float32 `json:"meta_average"`
+	OverallAverage 	float32 `json:"overall_average"`
+	PapCostAverage  float32 `json:"pap_cost_average"`
+	CommAverage     float32 `json:"comm_average"`
+	AsDescAverage   float32 `json:"as_desc_average"`
+}
+
+type ReviewAverages struct {
+	ReviewCount     int
+	OverallAverage  float32
+	PapCostAverage  float32
+	CommAverage     float32
+	AsDescAverage   float32
+}
+
 type Item struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Category    string `json:"category"`
-	//Yaf         string `json:"yaf"`
 	PublicId    string `json:"public_id"`
 	ItemId      string `json:"item_id"`
 	Created     string `json:"created"`
@@ -69,7 +84,7 @@ type Auction struct {
 
 type MetadataResp struct {
 	PublicId           string `json:"public_id"`
-	Score              int    `json:"score"`
+	Scores             Scores `json:"scores"`
 	TotalReviewsByUser int    `json:"total_reviews_by_user"`
 	TotalReviewsOfUser int    `json:"total_reviews_of_user"`
 }

@@ -312,11 +312,11 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 	a.DB.Model(&Review{}).Where("seller = ?", id).Count(&totalReviewsOf)
 	var totalReviewsBy int64
 	a.DB.Model(&Review{}).Where("reviewed_by = ?", id).Count(&totalReviewsBy)
-	calculatedScore, err := getScore(id)
+	scores, err := a.GetSellerScores(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went splat"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"public_id": id.String(), "score": calculatedScore, "total_reviews_of_user": totalReviewsOf, "total_reviews_by_user": totalReviewsBy})
+	c.JSON(http.StatusOK, gin.H{"public_id": id.String(), "scores": scores, "total_reviews_of_user": totalReviewsOf, "total_reviews_by_user": totalReviewsBy})
 }

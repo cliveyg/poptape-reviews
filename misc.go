@@ -169,12 +169,40 @@ func (a *App) fetchAndUnmarshalRequests(requests []HTTPRequest) []HTTPResponse {
 
 // ----------------------------------------------------------------------------
 
-func getScore(publicId uuid.UUID) (count int, err error) {
+func (a *App) GetSellerScores(sellerId uuid.UUID) (Scores, error) {
+	var avgs ReviewAverages
 
-	//TODO: Calculate a score - preferably weighted towards more recent reviews
-	res := fmt.Sprintf("public id is [%s]", publicId.String())
-	print(res)
+	// Query for averages and count for the seller
+	err := a.DB.Model(&Review{}).
+		Select("COUNT(*) as review_count, AVG(overall) as overall_average, AVG(pap_cost) as pap_cost_average, AVG(comm) as comm_average, AVG(as_desc) as as_desc_average").
+		Where("seller = ?", sellerId).
+		Scan(&avgs).Error
 
-	return 89, nil
+	if err != nil {
+		return Scores{}, err
+	}
+
+	// if fewer than 3 reviews, return zeroes
+	if avgs.ReviewCount < 3 {
+		return Scores{}, nil
+	}
+
+	// Calculate MetaAverage
+	metaAverage := (avgs.OverallAverage + avgs.PapCostAverage + avgs.CommAverage + avgs.AsDescAverage) / 4
+
+	return Scores{
+		MetaAverage:    metaAverage,
+		OverallAverage: avgs.OverallAverage,
+		PapCostAverage: avgs.PapCostAverage,
+		CommAverage:    avgs.CommAverage,
+		AsDescAverage:  avgs.AsDescAverage,
+	}, nil
+}
+
+// ----------------------------------------------------------------------------
+
+func roundFloat(val float32, precision int) float32 {
+	ratio := float32(math.Pow(10, float64(precision)))
+	return float32(math.Round(float64(val)*float64(ratio))) / ratio
 }
 
