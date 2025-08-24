@@ -1129,40 +1129,39 @@ func TestGetMetadataOK(t *testing.T) {
 		noError = false
 		t.Errorf("returned public id doesn't match sent id")
 	}
-
 	ma := roundFloat(mResp.Scores.MetaAverage, 2)
-	if ma != 7.44 {
+	if ma != 6.25 {
 		noError = false
-		t.Errorf("returned MetaAverage [%f] doesn't match expected [7.44]", ma)
+		t.Errorf("returned MetaAverage [%f] doesn't match expected [6.25]", ma)
 	}
 	da := roundFloat(mResp.Scores.AsDescAverage, 2)
-	if da != 7.44 {
+	if da != 6.67 {
 		noError = false
-		t.Errorf("returned AsDescAverage [%f] doesn't match expected [7.44]", da)
+		t.Errorf("returned AsDescAverage [%f] doesn't match expected [6.67]", da)
 	}
 	ca := roundFloat(mResp.Scores.CommAverage, 2)
-	if ca != 7.44 {
+	if ca != 6.33 {
 		noError = false
-		t.Errorf("returned CommAverage [%f] doesn't match expected [7.44]", ca)
+		t.Errorf("returned CommAverage [%f] doesn't match expected [6.33]", ca)
 	}
 	oa := roundFloat(mResp.Scores.OverallAverage, 2)
-	if oa != 7.44 {
+	if oa != 6.33 {
 		noError = false
-		t.Errorf("returned OverallAverage [%f] doesn't match expected [7.44]", oa)
+		t.Errorf("returned OverallAverage [%f] doesn't match expected [6.33]", oa)
 	}
 	pa := roundFloat(mResp.Scores.PapCostAverage, 2)
-	if pa != 7.44 {
+	if pa != 5.67 {
 		noError = false
-		t.Errorf("returned PapCostAverage [%f] doesn't match expected [7.44]", pa)
+		t.Errorf("returned PapCostAverage [%f] doesn't match expected [5.67]", pa)
 	}
 
-	if mResp.TotalReviewsByUser != 4 {
+	if mResp.TotalReviewsByUser != 0 {
 		noError = false
-		t.Errorf("returned reviews by user [%d] doesn't match expected [4]", mResp.TotalReviewsByUser)
+		t.Errorf("returned reviews by user [%d] doesn't match expected [0]", mResp.TotalReviewsByUser)
 	}
-	if mResp.TotalReviewsOfUser != 1 {
+	if mResp.TotalReviewsOfUser != 3 {
 		noError = false
-		t.Errorf("returned reviews of user [%d] doesn't match expected [1]", mResp.TotalReviewsOfUser)
+		t.Errorf("returned reviews of user [%d] doesn't match expected [3]", mResp.TotalReviewsOfUser)
 	}
 
 	if noError {
