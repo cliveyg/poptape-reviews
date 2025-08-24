@@ -1113,7 +1113,7 @@ func TestGetMetadataOK(t *testing.T) {
 	httpmock.RegisterResponder("GET", "=~username",
 		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
 
-	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req, _ := http.NewRequest("GET", "/reviews/user/46d7d11c-fa06-4e54-8208-95433b98cfc9", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
@@ -1125,7 +1125,7 @@ func TestGetMetadataOK(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 
-	if mResp.PublicId != "f38ba39a-3682-4803-a498-659f0bf05304" {
+	if mResp.PublicId != "46d7d11c-fa06-4e54-8208-95433b98cfc9" {
 		noError = false
 		t.Errorf("returned public id doesn't match sent id")
 	}

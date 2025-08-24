@@ -172,7 +172,7 @@ func (a *App) fetchAndUnmarshalRequests(requests []HTTPRequest) []HTTPResponse {
 func (a *App) GetSellerScores(sellerId uuid.UUID) (Scores, error) {
 	var avgs ReviewAverages
 
-	// Query for averages and count for the seller
+	// query for averages and count for the seller
 	err := a.DB.Model(&Review{}).
 		Select("COUNT(*) as review_count, AVG(overall) as overall_average, AVG(pap_cost) as pap_cost_average, AVG(comm) as comm_average, AVG(as_desc) as as_desc_average").
 		Where("seller = ?", sellerId).
@@ -182,20 +182,21 @@ func (a *App) GetSellerScores(sellerId uuid.UUID) (Scores, error) {
 		return Scores{}, err
 	}
 
+	a.Log.Debug().Interface("ReviewAverages", avgs).Send()
+
 	// if fewer than 3 reviews, return zeroes
 	if avgs.ReviewCount < 3 {
 		return Scores{}, nil
 	}
 
-	// Calculate MetaAverage
 	metaAverage := (avgs.OverallAverage + avgs.PapCostAverage + avgs.CommAverage + avgs.AsDescAverage) / 4
 
 	return Scores{
-		MetaAverage:    metaAverage,
-		OverallAverage: avgs.OverallAverage,
-		PapCostAverage: avgs.PapCostAverage,
-		CommAverage:    avgs.CommAverage,
-		AsDescAverage:  avgs.AsDescAverage,
+		MetaAverage:    roundFloat(metaAverage, 2),
+		OverallAverage: roundFloat(avgs.OverallAverage, 2),
+		PapCostAverage: roundFloat(avgs.PapCostAverage, 2),
+		CommAverage:    roundFloat(avgs.CommAverage, 2),
+		AsDescAverage:  roundFloat(avgs.AsDescAverage, 2),
 	}, nil
 }
 
