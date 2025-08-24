@@ -1113,7 +1113,7 @@ func TestGetMetadataOK(t *testing.T) {
 	httpmock.RegisterResponder("GET", "=~username",
 		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
 
-	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req, _ := http.NewRequest("GET", "/reviews/user/46d7d11c-fa06-4e54-8208-95433b98cfc9", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
@@ -1125,25 +1125,97 @@ func TestGetMetadataOK(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 
-	if mResp.PublicId != "f38ba39a-3682-4803-a498-659f0bf05304" {
+	if mResp.PublicId != "46d7d11c-fa06-4e54-8208-95433b98cfc9" {
 		noError = false
 		t.Errorf("returned public id doesn't match sent id")
 	}
-	if mResp.Score != 89 {
+	ma := roundFloat(mResp.Scores.MetaAverage, 2)
+	if ma != 6.25 {
 		noError = false
-		t.Errorf("returned score [%d] doesn't match expected [89]", mResp.Score)
+		t.Errorf("returned MetaAverage [%f] doesn't match expected [6.25]", ma)
 	}
-	if mResp.TotalReviewsByUser != 4 {
+	da := roundFloat(mResp.Scores.AsDescAverage, 2)
+	if da != 6.67 {
 		noError = false
-		t.Errorf("returned reviews by user [%d] doesn't match expected [89]", mResp.TotalReviewsByUser)
+		t.Errorf("returned AsDescAverage [%f] doesn't match expected [6.67]", da)
 	}
-	if mResp.TotalReviewsOfUser != 1 {
+	ca := roundFloat(mResp.Scores.CommAverage, 2)
+	if ca != 6.33 {
 		noError = false
-		t.Errorf("returned reviews of user [%d] doesn't match expected [89]", mResp.TotalReviewsOfUser)
+		t.Errorf("returned CommAverage [%f] doesn't match expected [6.33]", ca)
+	}
+	oa := roundFloat(mResp.Scores.OverallAverage, 2)
+	if oa != 6.33 {
+		noError = false
+		t.Errorf("returned OverallAverage [%f] doesn't match expected [6.33]", oa)
+	}
+	pa := roundFloat(mResp.Scores.PapCostAverage, 2)
+	if pa != 5.67 {
+		noError = false
+		t.Errorf("returned PapCostAverage [%f] doesn't match expected [5.67]", pa)
+	}
+
+	if mResp.TotalReviewsByUser != 0 {
+		noError = false
+		t.Errorf("returned reviews by user [%d] doesn't match expected [0]", mResp.TotalReviewsByUser)
+	}
+	if mResp.TotalReviewsOfUser != 3 {
+		noError = false
+		t.Errorf("returned reviews of user [%d] doesn't match expected [3]", mResp.TotalReviewsOfUser)
 	}
 
 	if noError {
 		fmt.Println("[PASS].....TestGetMetadataOK")
+	}
+}
+
+func TestGetMetadataOKNoScore(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/bbb7d11c-fa06-4e54-8208-95433b98cfc4", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
+
+	var mResp MetadataResp
+	err = json.NewDecoder(response.Body).Decode(&mResp)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if mResp.PublicId != "bbb7d11c-fa06-4e54-8208-95433b98cfc4" {
+		noError = false
+		t.Errorf("returned public id doesn't match sent id")
+	}
+
+	ma := roundFloat(mResp.Scores.MetaAverage, 2)
+	if ma != 0.00 {
+		noError = false
+		t.Errorf("returned MetaAverage [%f] doesn't match expected [0.00]", ma)
+	}
+
+	if mResp.TotalReviewsByUser != 0 {
+		noError = false
+		t.Errorf("returned reviews by user [%d] doesn't match expected [0]", mResp.TotalReviewsByUser)
+	}
+	if mResp.TotalReviewsOfUser != 1 {
+		noError = false
+		t.Errorf("returned reviews of user [%d] doesn't match expected [1]", mResp.TotalReviewsOfUser)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataOKNoScore")
 	}
 }
 
