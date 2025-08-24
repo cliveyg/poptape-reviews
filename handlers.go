@@ -10,8 +10,98 @@ import (
 	"strconv"
 )
 
+<<<<<<< Updated upstream
 // ----------------------------------------------------------------------------
 
+=======
+/*
+// initializeRoutes sets up the routes for the application.
+func (a *App) initializeRoutes() {
+	r := a.Router
+	r.GET("/status", a.getStatus)
+	r.GET("/reviews", a.getAllMyReviews)
+	r.POST("/reviews", a.createReview)
+	r.GET("/reviews/:reviewId", a.getReview)
+	r.DELETE("/reviews/:reviewId", a.deleteReview)
+
+	r.GET("/reviews/by/user/:publicId", a.getReviewsByUser)
+	r.GET("/reviews/of/user/:publicId", a.getReviewsOfUser)
+	r.GET("/reviews/auction/:auctionId", a.getReviewsByAuction)
+	r.GET("/reviews/item/:itemId", a.getReviewByItem)
+}
+
+ */
+
+// getStatus returns the application status.
+func (a *App) getStatus(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"message": "System running...",
+		"version": "1.0.0",
+	})
+}
+
+// getAllMyReviews fetches all reviews for the current user.
+func (a *App) getAllMyReviews(c *gin.Context) {
+	publicId := c.GetHeader("X-User-Id") // You may replace this with your auth logic
+	count, _ := strconv.Atoi(c.DefaultQuery("count", "10"))
+	start, _ := strconv.Atoi(c.DefaultQuery("start", "0"))
+
+	reviews, err := getReviewsByInput(a.DB, "reviewed_by", publicId, start, count)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch reviews for user")
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+		return
+	}
+	if len(reviews) == 0 {
+		c.JSON(http.StatusNotFound, []Review{})
+		return
+	}
+	c.JSON(http.StatusOK, reviews)
+}
+
+// getReview fetches a review by its ID.
+func (a *App) getReview(c *gin.Context) {
+	reviewIdStr := c.Param("reviewId")
+	reviewId, err := uuid.Parse(reviewIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid review ID"})
+		return
+	}
+	var rev Review
+	rev.ReviewId = reviewId
+	if err := rev.getReview(a.DB); err != nil {
+		log.Error().Err(err).Msg("Failed to get review")
+		c.JSON(http.StatusNotFound, gin.H{"message": "Review not found"})
+		return
+	}
+	c.JSON(http.StatusOK, rev)
+}
+
+// deleteReview deletes a review by its ID.
+func (a *App) deleteReview(c *gin.Context) {
+	publicId := c.GetHeader("X-User-Id") // You may replace this with your auth logic
+	reviewIdStr := c.Param("reviewId")
+	reviewId, err := uuid.Parse(reviewIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a valid review ID"})
+		return
+	}
+	rev := Review{ReviewId: reviewId, ReviewedBy: publicId}
+	res, err := rev.deleteReview(a.DB)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to delete review")
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+		return
+	}
+	if res == 1 {
+		c.Status(http.StatusGone)
+	} else {
+		c.Status(http.StatusNotAcceptable)
+	}
+}
+
+// createReview creates a new review.
+>>>>>>> Stashed changes
 func (a *App) createReview(c *gin.Context) {
 
 	a.Log.Debug().Msg("In createReview")
