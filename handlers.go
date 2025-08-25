@@ -287,16 +287,8 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
-		return
-	}
-
 	// check user exists
-	sc := 999
-	err, sc = a.checkUserExists(c)
+	err, sc := a.checkUserExists(c)
 	if err != nil {
 		a.Log.Info().Msg(err.Error())
 		if sc == 404 {
