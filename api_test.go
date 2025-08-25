@@ -2,12 +2,18 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -1476,7 +1482,7 @@ func TestCreateReviewFailFetchItemBodyNotJson(t *testing.T) {
 }
 
 // we run these tests last as we have mocked the DB differently to the above tests
-/*
+
 func TestRowsError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
@@ -1492,12 +1498,13 @@ func TestRowsError(t *testing.T) {
 	}), &gorm.Config{})
 	require.NoError(t, err)
 
+	a.DB = gormDB
+
 	// make the query return an error.
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))	//mock.ExpectQuery("SELECT count(*) FROM .* WHERE .*").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))
 	mock.ExpectQuery(`SELECT \* FROM "reviews" WHERE reviewed_by = \$1 ORDER BY created desc LIMIT \$2`).
 		WillReturnError(errors.New("forced error"))
-	a.DB = gormDB
 
 	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -1521,7 +1528,6 @@ func TestRowsError(t *testing.T) {
 
 }
 
- */
 /*
 func TestMetaDataCountDBError(t *testing.T) {
 	db, mock, err := sqlmock.New()
