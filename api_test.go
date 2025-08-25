@@ -1623,3 +1623,44 @@ func TestFetchReviewsRowsCloseError(t *testing.T) {
 	}
 }
 
+func TestFetchReviewsRowsNextScanError(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	mock.ExpectClose()
+	require.NoError(t, err)
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	require.NoError(t, err)
+	a.DB = gormDB
+
+	mock.ExpectQuery("SELECT count").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+	rows := sqlmock.NewRows([]string{"review_id", "review", "reviewed_by", "auction_id", "item_id", "seller", "overall", "post_and_packaging", "communication", "as_described", "created"}).
+		AddRow(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil).RowError(0, errors.New("row scan error"))
+	mock.ExpectQuery("SELECT (.+) FROM \"reviews\"").WillReturnRows(rows)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+
+	req, _ := http.NewRequest("GET", "/reviews", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "blah")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestFetchReviewsRowsNextScanError")
+	}
+}
