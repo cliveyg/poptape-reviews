@@ -1384,23 +1384,23 @@ func TestRowsError(t *testing.T) {
 	require.NoError(t, err)
 
 	// make the query return an error.
-	mock.ExpectQuery("SELECT .* FROM .*").WillReturnError(errors.New("forced error"))
+	mock.ExpectQuery("SELECT .* FROM .* ORDER BY created desc LIMIT 3").WillReturnError(errors.New("forced error"))
 	a.DB = gormDB
 
 	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1", nil)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	noError := checkResponseCode(t, http.StatusOK, response.Code)
 	var resp RespMessage
 	err = json.NewDecoder(response.Body).Decode(&resp)
 	if err != nil {
 		noError = false
 		t.Errorf("Error decoding returned JSON: " + err.Error())
 	}
-	if resp.Message != "forced error" {
+	if resp.Message != "Bad request" {
 		noError = false
-		t.Errorf("Error [%s] doesn't match expected [forced error]", resp.Message)
+		t.Errorf("Error [%s] doesn't match expected [Bad request]", resp.Message)
 	}
 
 	if noError {
