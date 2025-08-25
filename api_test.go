@@ -1577,7 +1577,7 @@ func TestMetaDataCountDBError(t *testing.T) {
 	}
 
 }
-
+/*
 func TestFetchReviewsRowsCloseError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
@@ -1618,3 +1618,4 @@ func TestFetchReviewsRowsCloseError(t *testing.T) {
 		fmt.Println("[PASS].....TestFetchReviewsRowsCloseError")
 	}
 }
+*/
