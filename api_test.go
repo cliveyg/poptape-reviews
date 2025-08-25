@@ -1516,3 +1516,44 @@ func TestRowsError(t *testing.T) {
 	}
 
 }
+
+func TestMetaDataCountDBError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	require.NoError(t, err)
+
+	// make the query return an error.
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(9))
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE seller = \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
+	mock.ExpectQuery(`SELECT count\(\*\) as review_count, AVG\(overall\) as overall_average, AVG\(pap_cost\) as pap_cost_average, AVG\(comm\) as comm_average, AVG\(as_desc\) as as_desc_average FROM "reviews" WHERE seller = \$1`).
+		WillReturnError(errors.New("forced error"))
+	a.DB = gormDB
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Bad request" {
+		noError = false
+		t.Errorf("Error [%s] doesn't match expected [Bad request]", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestMetaDataCountDBError")
+	}
+
+}
