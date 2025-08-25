@@ -1175,6 +1175,40 @@ func TestGetMetadataOK(t *testing.T) {
 	}
 }
 
+func TestGetMetadataUserDoesNotExist(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(404, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/46d7d11c-fa06-4e54-8208-95433b98cfc9", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	var rm RespMessage
+	err = json.NewDecoder(response.Body).Decode(&rm)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if rm.Message != "User doesn't exist" {
+		noError = false
+		t.Errorf("message returned [%s] doesn't match expected [User doesn't exist]", rm.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataUserDoesNotExist")
+	}
+}
+
 func TestGetMetadataOKNoScore(t *testing.T) {
 
 	clearTable()
