@@ -1384,7 +1384,8 @@ func TestRowsError(t *testing.T) {
 	require.NoError(t, err)
 
 	// make the query return an error.
-	mock.ExpectQuery("SELECT .* FROM .* ORDER BY created desc LIMIT 3").WillReturnError(errors.New("forced error"))
+	mock.ExpectQuery("SELECT count(*) FROM .* WHERE .*").WillReturnRows("1")
+	mock.ExpectQuery("SELECT .* FROM .* WHERE .* ORDER BY created desc LIMIT 3").WillReturnError(errors.New("forced error"))
 	a.DB = gormDB
 
 	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1", nil)
