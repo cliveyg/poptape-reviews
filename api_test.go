@@ -1286,6 +1286,8 @@ func TestGetMetadataFailNoContentTypeHdr(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "=~username",
 		httpmock.NewStringResponder(200, `{}`))
 
@@ -1306,6 +1308,8 @@ func TestGetMetadataFailBadUsername(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "=~username",
 		httpmock.NewStringResponder(500, `{}`))
 
@@ -1521,6 +1525,11 @@ func TestMetaDataCountDBError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{}`))
 
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{
 		Conn: db,
