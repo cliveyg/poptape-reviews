@@ -288,7 +288,8 @@ func (a *App) getMetadataOfUser(c *gin.Context) {
 	}
 
 	// check user exists
-	err, sc := a.checkUserExists(c)
+	var id uuid.UUID
+	err, sc := a.checkUserExists(c, &id)
 	if err != nil {
 		a.Log.Info().Msg(err.Error())
 		if sc == 404 {
