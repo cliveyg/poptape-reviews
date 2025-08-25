@@ -1537,9 +1537,9 @@ func TestMetaDataCountDBError(t *testing.T) {
 	require.NoError(t, err)
 
 	// make the query return an error.
-	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(9))
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE seller = \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(9))
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
 	mock.ExpectQuery(`SELECT count\(\*\) as review_count, AVG\(overall\) as overall_average, AVG\(pap_cost\) as pap_cost_average, AVG\(comm\) as comm_average, AVG\(as_desc\) as as_desc_average FROM "reviews" WHERE seller = \$1`).
 		WillReturnError(errors.New("forced error"))
@@ -1556,9 +1556,9 @@ func TestMetaDataCountDBError(t *testing.T) {
 		noError = false
 		t.Errorf("Error decoding returned JSON: " + err.Error())
 	}
-	if resp.Message != "Bad request" {
+	if resp.Message != "Something went splat" {
 		noError = false
-		t.Errorf("Error [%s] doesn't match expected [Bad request]", resp.Message)
+		t.Errorf("Error [%s] doesn't match expected [Something went splat]", resp.Message)
 	}
 
 	if noError {
