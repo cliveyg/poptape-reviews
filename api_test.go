@@ -1549,7 +1549,7 @@ func TestMetaDataCountDBError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
 	var resp RespMessage
 	err = json.NewDecoder(response.Body).Decode(&resp)
 	if err != nil {
