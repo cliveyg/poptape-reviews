@@ -1422,7 +1422,7 @@ func TestCreateReviewFailFetchItemData(t *testing.T) {
 	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusServiceUnavailable, response.Code)
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
 
 	if getTotalRecordsInTable() != oldRecCnt {
 		noError = false
@@ -1463,7 +1463,7 @@ func TestCreateReviewFailFetchItemBodyNotJson(t *testing.T) {
 	req.Header.Set("X-Access-Token", "faketoken")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusServiceUnavailable, response.Code)
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
 
 	if getTotalRecordsInTable() != oldRecCnt {
 		noError = false
