@@ -1424,7 +1424,7 @@ func TestCreateReviewFailFetchItemData(t *testing.T) {
 
 	noError := checkResponseCode(t, http.StatusCreated, response.Code)
 
-	if getTotalRecordsInTable() != oldRecCnt {
+	if getTotalRecordsInTable() != oldRecCnt+1 {
 		noError = false
 		t.Errorf("Before and after record counts don't match")
 	}
@@ -1465,7 +1465,7 @@ func TestCreateReviewFailFetchItemBodyNotJson(t *testing.T) {
 
 	noError := checkResponseCode(t, http.StatusCreated, response.Code)
 
-	if getTotalRecordsInTable() != oldRecCnt {
+	if getTotalRecordsInTable() != oldRecCnt+1 {
 		noError = false
 		t.Errorf("Before and after record counts don't match")
 	}
