@@ -3,11 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -1366,4 +1371,40 @@ func TestPaginationOK(t *testing.T) {
 	if noError {
 		fmt.Println("[PASS].....TestPaginationOK")
 	}
+}
+
+func TestRowsError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	require.NoError(t, err)
+
+	// make the query return an error.
+	mock.ExpectQuery("SELECT .* FROM .*").WillReturnError(errors.New("forced error"))
+	a.DB = gormDB
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "forced error" {
+		noError = false
+		t.Errorf("Error [%s] doesn't match expected [forced error]", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestRowsError")
+	}
+
 }
