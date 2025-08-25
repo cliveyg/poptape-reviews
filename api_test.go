@@ -1299,6 +1299,27 @@ func TestGetMetadataFailNoContentTypeHdr(t *testing.T) {
 	}
 }
 
+func TestGetMetadataFailBadUsername(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(500, `{}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailBadUsername")
+	}
+}
+
 func TestPaginationOK(t *testing.T) {
 
 	clearTable()
