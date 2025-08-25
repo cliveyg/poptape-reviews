@@ -1616,7 +1616,7 @@ func TestFetchReviewsRowsCloseError(t *testing.T) {
 	req.Header.Set("X-Access-Token", "somefaketoken")
 	response := executeRequest(req)
 
-	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
 
 	if noError {
 		fmt.Println("[PASS].....TestFetchReviewsRowsCloseError")
