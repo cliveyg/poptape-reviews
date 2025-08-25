@@ -1384,7 +1384,7 @@ func TestRowsError(t *testing.T) {
 	require.NoError(t, err)
 
 	// make the query return an error.
-	mock.ExpectQuery("SELECT coun.* FROM .* WHERE .*").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))
+	mock.ExpectQuery("SELECT count(\*) FROM \"reviews\" WHERE reviewed_by = 'f38ba39a-3682-4803-a498-659f0bf05304'").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))
 	//mock.ExpectQuery("SELECT count(*) FROM .* WHERE .*").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 	mock.ExpectQuery("SELECT .* FROM .* WHERE .* ORDER BY .*").WillReturnError(errors.New("forced error"))
 	a.DB = gormDB
