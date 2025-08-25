@@ -65,7 +65,7 @@ Expected return codes: [200, 404]
 * ~~Return reviews by user~~
 * ~~Return reviews of user~~
 * Need to add check for auction winner
-* Add score calculation - weighted towards most recent review scores
+* ~~Add score calculation~~ - weighted towards most recent review scores
 * ~~Need to check item is valid~~
 * ~~Fix some tests - some are failing even though the microservice works~~
 * ~~Write more tests~~
