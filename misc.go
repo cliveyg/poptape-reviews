@@ -74,9 +74,10 @@ func checkRequest(c *gin.Context) (bool, int, string) {
 
 // ----------------------------------------------------------------------------
 
-func (a *App) checkUserExists(c *gin.Context) (error, int) {
+func (a *App) checkUserExists(c *gin.Context, id *uuid.UUID) (error, int) {
 
-	id, err := uuid.Parse(c.Param("id"))
+	var err error
+	*id, err = uuid.Parse(c.Param("id"))
 	if err != nil {
 		a.Log.Info().Msgf("Not a uuid string: [%s]", err.Error())
 		return err, 400

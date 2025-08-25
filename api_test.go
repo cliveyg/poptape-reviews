@@ -2,12 +2,18 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -1169,6 +1175,40 @@ func TestGetMetadataOK(t *testing.T) {
 	}
 }
 
+func TestGetMetadataUserDoesNotExist(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(404, `{"foo": "bar"}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/46d7d11c-fa06-4e54-8208-95433b98cfc9", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	var rm RespMessage
+	err = json.NewDecoder(response.Body).Decode(&rm)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if rm.Message != "User doesn't exist" {
+		noError = false
+		t.Errorf("message returned [%s] doesn't match expected [User doesn't exist]", rm.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataUserDoesNotExist")
+	}
+}
+
 func TestGetMetadataOKNoScore(t *testing.T) {
 
 	clearTable()
@@ -1281,6 +1321,8 @@ func TestGetMetadataFailNoContentTypeHdr(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", "=~username",
 		httpmock.NewStringResponder(200, `{}`))
 
@@ -1291,6 +1333,29 @@ func TestGetMetadataFailNoContentTypeHdr(t *testing.T) {
 
 	if noError {
 		fmt.Println("[PASS].....TestGetMetadataFailNoContentTypeHdr")
+	}
+}
+
+func TestGetMetadataFailBadUsername(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(500, `{}`))
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestGetMetadataFailBadUsername")
 	}
 }
 
@@ -1367,3 +1432,228 @@ func TestPaginationOK(t *testing.T) {
 		fmt.Println("[PASS].....TestPaginationOK")
 	}
 }
+
+func TestCreateReviewFailFetchItemData(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	oldRecCnt := getTotalRecordsInTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/items/.",
+		httpmock.NewStringResponder(500, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
+
+	if getTotalRecordsInTable() != oldRecCnt+1 {
+		noError = false
+		t.Errorf("Before and after record counts don't match")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewFailFetchItemData")
+	}
+
+}
+
+func TestCreateReviewFailFetchItemBodyNotJson(t *testing.T) {
+
+	clearTable()
+	_, err := a.InsertSpecificDummyReviews()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	oldRecCnt := getTotalRecordsInTable()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/auctionhouse/auction/.",
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	httpmock.RegisterResponder("GET", "=~^https://poptape.club/items/.",
+		httpmock.NewStringResponder(200, `{"public_id: "f38ba39a-3682-4803-a498-659f0bf05304" }`))
+
+	payload := []byte(createJson)
+
+	req, _ := http.NewRequest("POST", "/reviews", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "faketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusCreated, response.Code)
+
+	if getTotalRecordsInTable() != oldRecCnt+1 {
+		noError = false
+		t.Errorf("Before and after record counts don't match")
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestCreateReviewFailFetchItemBodyNotJson")
+	}
+
+}
+
+// we run these tests last as we have mocked the DB differently to the above tests
+
+func TestRowsError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	mock.ExpectClose()
+	require.NoError(t, err)
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	require.NoError(t, err)
+
+	a.DB = gormDB
+
+	// make the query return an error.
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))
+	mock.ExpectQuery(`SELECT \* FROM "reviews" WHERE reviewed_by = \$1 ORDER BY created desc LIMIT \$2`).
+		WillReturnError(errors.New("forced error"))
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304?page=1", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Bad request" {
+		noError = false
+		t.Errorf("Error [%s] doesn't match expected [Bad request]", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestRowsError")
+	}
+
+}
+
+func TestMetaDataCountDBError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	mock.ExpectClose()
+	require.NoError(t, err)
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "=~username",
+		httpmock.NewStringResponder(200, `{}`))
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	require.NoError(t, err)
+
+	// make the query return an error.
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE seller = \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(9))
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
+	mock.ExpectQuery(`SELECT COUNT\(\*\) as review_count, AVG\(overall\) as overall_average, AVG\(pap_cost\) as pap_cost_average, AVG\(comm\) as comm_average, AVG\(as_desc\) as as_desc_average FROM "reviews" WHERE seller = \$1`).
+		WillReturnError(errors.New("forced error"))
+	a.DB = gormDB
+
+	req, _ := http.NewRequest("GET", "/reviews/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusInternalServerError, response.Code)
+	var resp RespMessage
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		noError = false
+		t.Errorf("Error decoding returned JSON: " + err.Error())
+	}
+	if resp.Message != "Something went splat" {
+		noError = false
+		t.Errorf("Error [%s] doesn't match expected [Something went splat]", resp.Message)
+	}
+
+	if noError {
+		fmt.Println("[PASS].....TestMetaDataCountDBError")
+	}
+
+}
+
+func TestFetchReviewsRowsCloseError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	mock.ExpectClose()
+	require.NoError(t, err)
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	require.NoError(t, err)
+	a.DB = gormDB
+
+	// Set up for count
+	mock.ExpectQuery("SELECT count").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+
+	// Set up for rows
+	rows := sqlmock.NewRows([]string{"review_id", "review", "reviewed_by", "auction_id", "item_id", "seller", "overall", "post_and_packaging", "communication", "as_described", "created"})
+	rows.CloseError(errors.New("close error"))
+	mock.ExpectQuery("SELECT (.+) FROM \"reviews\"").WillReturnRows(rows)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", os.Getenv("AUTHYURL"),
+		httpmock.NewStringResponder(200, `{"public_id": "f38ba39a-3682-4803-a498-659f0bf05000" }`))
+
+	req, _ := http.NewRequest("GET", "/reviews/by/user/f38ba39a-3682-4803-a498-659f0bf05304", nil)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("X-Access-Token", "somefaketoken")
+	response := executeRequest(req)
+
+	noError := checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	if noError {
+		fmt.Println("[PASS].....TestFetchReviewsRowsCloseError")
+	}
+}
+
