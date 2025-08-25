@@ -1626,7 +1626,6 @@ func TestFetchReviewsRowsCloseError(t *testing.T) {
 func TestFetchReviewsRowsNextScanError(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
-	mock.ExpectClose()
 	require.NoError(t, err)
 	defer func(db *sql.DB) {
 		err := db.Close()
