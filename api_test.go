@@ -1641,10 +1641,13 @@ func TestFetchReviewsRowsNextScanError(t *testing.T) {
 	require.NoError(t, err)
 	a.DB = gormDB
 
-	mock.ExpectQuery("SELECT count").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
+
 	rows := sqlmock.NewRows([]string{"review_id", "review", "reviewed_by", "auction_id", "item_id", "seller", "overall", "post_and_packaging", "communication", "as_described", "created"}).
 		AddRow(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil).RowError(0, errors.New("row scan error"))
-	mock.ExpectQuery("SELECT (.+) FROM \"reviews\"").WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT \* FROM "reviews" WHERE reviewed_by = \$1 ORDER BY created desc LIMIT \$2`).
+		WillReturnRows(rows)
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
