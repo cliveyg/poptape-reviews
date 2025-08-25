@@ -1,5 +1,5 @@
 # poptape-reviews
-![All unit tests pass](https://github.com/cliveyg/poptape-reviews/actions/workflows/unit-tests.yml/badge.svg) ![Successfully deployed](https://github.com/cliveyg/poptape-reviews/actions/workflows/post-merge-deployment.yml/badge.svg) ![Tests passed](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/cliveyg/c0dcede40c842bca92c6f8a5e4583c3c/raw/1a3c12842bd6c2ed67a413b0fe14d7698282c384/poptape-reviews-go-tests.json&label=Tests) ![Test coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/cliveyg/c0dcede40c842bca92c6f8a5e4583c3c/raw/5c2990d505cc30965a424e538a4aae4c3f8050ca/poptape-reviews-go-coverage.json&label=Test%20Coverage) ![release](https://img.shields.io/github/v/release/cliveyg/poptape-reviews)
+![All unit tests pass](https://github.com/cliveyg/poptape-reviews/actions/workflows/unit-tests.yml/badge.svg) ![Successfully deployed](https://github.com/cliveyg/poptape-reviews/actions/workflows/post-merge-deployment.yml/badge.svg) ![Tests passed](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/cliveyg/c0dcede40c842bca92c6f8a5e4583c3c/raw/3a36203127dcac4ca44b135e949809f2e4b1a60e/poptape-reviews-go-tests.json&label=Tests) ![Test coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/cliveyg/c0dcede40c842bca92c6f8a5e4583c3c/raw/dfd0328e586d8c56a833e1df4be835f7fea10ed6/poptape-reviews-go-coverage.json&label=Test%20Coverage) ![release](https://img.shields.io/github/v/release/cliveyg/poptape-reviews)
 
 
 
@@ -11,9 +11,6 @@ than one review per auction. Editing of a review after creation is not allowed
 but reviews can be deleted (though this may change or I may add a deleted flag
 if a user wants to remove a review so a user cannot delete a review and add
 another).
-
-~~Maybe remove some authentication as all people need to see reviews whether 
-authenticated or not.~~
 
 ### API routes
 
