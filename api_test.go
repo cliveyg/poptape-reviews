@@ -1541,7 +1541,7 @@ func TestMetaDataCountDBError(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(9))
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "reviews" WHERE reviewed_by = \$1`).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(7))
-	mock.ExpectQuery(`SELECT count\(\*\) as review_count, AVG\(overall\) as overall_average, AVG\(pap_cost\) as pap_cost_average, AVG\(comm\) as comm_average, AVG\(as_desc\) as as_desc_average FROM "reviews" WHERE seller = \$1`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) as review_count, AVG\(overall\) as overall_average, AVG\(pap_cost\) as pap_cost_average, AVG\(comm\) as comm_average, AVG\(as_desc\) as as_desc_average FROM "reviews" WHERE seller = \$1`).
 		WillReturnError(errors.New("forced error"))
 	a.DB = gormDB
 
