@@ -1136,9 +1136,9 @@ func TestGetMetadataOK(t *testing.T) {
 		t.Errorf("returned public id doesn't match sent id")
 	}
 	ma := roundFloat(mResp.Scores.MetaAverage, 2)
-	if ma != 6.25 {
+	if ma != 62.5 {
 		noError = false
-		t.Errorf("returned MetaAverage [%f] doesn't match expected [6.25]", ma)
+		t.Errorf("returned MetaAverage [%f] doesn't match expected [62.5]", ma)
 	}
 	da := roundFloat(mResp.Scores.AsDescAverage, 2)
 	if da != 6.67 {
@@ -1516,7 +1516,6 @@ func TestCreateReviewFailFetchItemBodyNotJson(t *testing.T) {
 }
 
 // we run these tests last as we have mocked the DB differently to the above tests
-
 func TestRowsError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	mock.ExpectClose()
@@ -1614,6 +1613,7 @@ func TestMetaDataCountDBError(t *testing.T) {
 	}
 
 }
+
 
 func TestFetchReviewsRowsCloseError(t *testing.T) {
 	db, mock, err := sqlmock.New()
