@@ -191,9 +191,10 @@ func (a *App) GetSellerScores(sellerId uuid.UUID) (Scores, error) {
 	}
 
 	metaAverage := (avgs.OverallAverage + avgs.PapCostAverage + avgs.CommAverage + avgs.AsDescAverage) / 4
+	metaAveragePercentage := metaAverage * 10
 
 	return Scores{
-		MetaAverage:    roundFloat(metaAverage, 2),
+		MetaAverage:    roundFloat(metaAveragePercentage, 1),
 		OverallAverage: roundFloat(avgs.OverallAverage, 2),
 		PapCostAverage: roundFloat(avgs.PapCostAverage, 2),
 		CommAverage:    roundFloat(avgs.CommAverage, 2),
