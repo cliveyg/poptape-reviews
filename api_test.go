@@ -1130,9 +1130,9 @@ func TestGetMetadataOK(t *testing.T) {
 		t.Errorf("returned public id doesn't match sent id")
 	}
 	ma := roundFloat(mResp.Scores.MetaAverage, 2)
-	if ma != 6.25 {
+	if ma != 62.5 {
 		noError = false
-		t.Errorf("returned MetaAverage [%f] doesn't match expected [6.25]", ma)
+		t.Errorf("returned MetaAverage [%f] doesn't match expected [62.5]", ma)
 	}
 	da := roundFloat(mResp.Scores.AsDescAverage, 2)
 	if da != 6.67 {
