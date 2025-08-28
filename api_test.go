@@ -2,12 +2,17 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/jarcoal/httpmock"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -1510,7 +1515,6 @@ func TestCreateReviewFailFetchItemBodyNotJson(t *testing.T) {
 }
 
 // we run these tests last as we have mocked the DB differently to the above tests
-/*
 func TestRowsError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	mock.ExpectClose()
@@ -1557,6 +1561,7 @@ func TestRowsError(t *testing.T) {
 
 }
 
+/*
 func TestMetaDataCountDBError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	mock.ExpectClose()
